@@ -138,7 +138,7 @@
 
 {% for group in skill_groups %}{% if group.verified or group.familiarity or group.related %}
 \item{
-	extbf{ {{ group.name | latex_escape }}}: {% if group.verified %}{{ group.verified | join(', ') | latex_escape }}{% endif %}{% if group.familiarity %}{% if group.verified %}, {% endif %}\textit{Familiarity}: {{ group.familiarity | join(', ') | latex_escape }}{% endif %}{% if group.related %}{% if group.verified or group.familiarity %}, {% endif %}\textit{Related experience}: {{ group.related | join('; ') | latex_escape }}{% endif %}
+  \csname textbf\endcsname{ {{ group.name | latex_escape }}}: {% if group.verified %}{{ group.verified | join(', ') | latex_escape }}{% endif %}{% if group.familiarity %}{% if group.verified %}, {% endif %}\textit{Familiarity}: {{ group.familiarity | join(', ') | latex_escape }}{% endif %}{% if group.related %}{% if group.verified or group.familiarity %}, {% endif %}\textit{Related experience}: {{ group.related | join('; ') | latex_escape }}{% endif %}
 }
 
 {% endif %}{% endfor %}

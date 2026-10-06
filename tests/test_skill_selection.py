@@ -78,6 +78,15 @@ def test_generated_cv_preserves_source_resume_layout_and_section_order():
     assert section_positions == sorted(section_positions)
 
 
+def test_generated_cv_skill_groups_use_the_textbf_latex_command():
+    profile = CandidateProfile(skills=[Skill(name="Python", status="VERIFIED")])
+
+    tex = generate_cv_tex(profile, JobAnalysis(), MatchAnalysis(), [])
+
+    assert r"\csname textbf\endcsname{ Programming \& Data}" in tex
+    assert "\nextbf{" not in tex
+
+
 def test_selected_unsupported_requirement_is_added_as_a_skill():
     profile = CandidateProfile(skills=[Skill(name="Python", evidence=["Built Python services."])])
     job = JobAnalysis(required_skills=["Kubernetes"])
