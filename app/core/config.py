@@ -7,7 +7,6 @@ load_dotenv(ROOT / ".env")
 DATA_DIR = ROOT / "data"
 APPLICATIONS_DIR = DATA_DIR / "applications"
 PROFILE_PATH = DATA_DIR / "candidate_profile.json"
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATA_DIR / 'applications.db'}")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 

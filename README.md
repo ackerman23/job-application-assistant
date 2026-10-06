@@ -31,7 +31,7 @@ On first launch, an empty `data/candidate_profile.json` is created. Edit the pro
 {"name":"SysML","status":"FAMILIARITY","evidence":["Completed introductory coursework"]}
 ```
 
-Profile data, generated documents, and the SQLite database are stored locally. When AI-assisted analysis or cover-letter generation is used, job text and relevant candidate profile evidence are sent to the configured OpenAI API. `data/applications/`, `.env`, and database files are ignored by Git. Do not commit private application materials.
+Profile data and generated documents are stored locally as JSON and files; no database is required. When AI-assisted analysis or cover-letter generation is used, job text and relevant candidate profile evidence are sent to the configured OpenAI API. `data/applications/` and `.env` are ignored by Git. Do not commit private application materials.
 
 ## Current MVP behavior
 
@@ -39,7 +39,7 @@ Profile data, generated documents, and the SQLite database are stored locally. W
 - Requirements are compared against profile skills, experience, and projects. The AI classifier must cite profile evidence for VERIFIED or TRANSFERABLE matches; familiarity and unsupported gaps remain visibly labeled.
 - The human review panel focuses on technical skills, tools, and engineering domains. General soft skills such as communication and teamwork are excluded from technical CV selection.
 - A CV is rendered from profile evidence. Selected requirements determine skill placement and prioritize relevant experience; unsupported requirements can be added explicitly as skills when the user chooses them. Existing experience wording is preserved while relevant bullets are prioritized.
-- Each analyzed application is recorded in SQLite. Generated reports include the job text, typed analyses, learning plan, and change log.
+- Generated reports and downloads are stored as local files under `data/applications/`.
 - The API is available at `/docs` when running FastAPI.
 
 ## Documentation

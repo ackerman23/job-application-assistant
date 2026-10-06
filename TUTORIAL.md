@@ -109,4 +109,4 @@ The environment variable prevents unrelated system-wide pytest plugins from bein
 
 ## Data and privacy
 
-Profile data, the SQLite application history, and generated files are stored locally. When AI features are used, the job description and relevant candidate evidence are sent to the configured OpenAI API. `data/applications/`, `.env`, and the database are ignored by Git; keep personal application materials out of commits.
+Profile data and generated files are stored locally. When AI features are used, the job description and relevant candidate evidence are sent to the configured OpenAI API. `data/applications/` and `.env` are ignored by Git; keep personal application materials out of commits.

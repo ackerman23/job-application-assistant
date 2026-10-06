@@ -87,7 +87,6 @@ Style checks are advisory. They produce suggestions about length, paragraphs, cl
 app/
   api/                  Flask routes and FastAPI/MCP server
   core/                 Configuration and project paths
-  database/             SQLite persistence helpers
   models/               Pydantic domain schemas
   prompts/              Cover-letter generation instructions
   services/             Analysis, matching, workflow, and document generation
@@ -146,11 +145,10 @@ The following are intentionally ignored by Git:
 - `.env`
 - `data/candidate_profile.json`
 - `data/applications/`
-- SQLite database files
 - Generated PDFs and LaTeX build artifacts
 - Virtual environments and Python caches
 
-Do not commit personal profiles, job descriptions, generated letters, private application history, API keys, or access tokens.
+Do not commit personal profiles, job descriptions, generated letters, private application files, API keys, or access tokens.
 
 When AI features are used, the configured provider receives the job description and relevant candidate evidence. Review the provider's data policy before using sensitive information.
 

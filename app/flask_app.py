@@ -9,7 +9,7 @@ if __package__ in (None, ""):
 
 from flask import Flask, jsonify, render_template, request, send_file
 
-from app.api.flask_routes import applications_bp, documents_bp, jobs_bp, profiles_bp
+from app.api.flask_routes import documents_bp, jobs_bp, profiles_bp
 from app.core.config import APPLICATIONS_DIR
 from app.models.schemas import CandidateProfile, MatchType
 from app.services.application_services import (
@@ -26,7 +26,6 @@ def create_app() -> Flask:
     app = Flask(__name__, template_folder="templates")
     app.register_blueprint(profiles_bp)
     app.register_blueprint(jobs_bp)
-    app.register_blueprint(applications_bp)
     app.register_blueprint(documents_bp)
 
     @app.get("/")

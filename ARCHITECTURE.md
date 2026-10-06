@@ -58,7 +58,7 @@ Existing Pydantic schemas and matching/generation rules remain the source of tru
 
 Responsibilities: interact with external systems and local resources.
 
-Current infrastructure includes JSON profile storage, SQLite application history, local file storage, LaTeX compilation, and the OpenAI client. These can remain as-is for the immediate workflow-unification step. Repository interfaces and provider abstractions should be added when there is a concrete need for alternate storage or model providers, not as a prerequisite for fixing orchestration.
+Current infrastructure includes JSON profile storage, local file storage, LaTeX compilation, and the OpenAI client. Repository interfaces and provider abstractions should be added only when there is a concrete need for alternate storage or model providers.
 
 ## Target request flow
 
@@ -113,7 +113,6 @@ app/
     flask_routes/          # Flask delivery adapters
     fastapi_mcp/           # MCP/HTTP delivery adapter
   mcp/                     # MCP tool definitions and adapters
-  database/                # SQLite persistence
   templates/               # Flask UI
 ```
 
