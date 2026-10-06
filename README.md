@@ -17,6 +17,8 @@ python scripts/setup.py run
 
 The helper also provides `python scripts/setup.py test` and `python scripts/setup.py clean`.
 
+To begin with a fictional base CV rather than an empty profile, run `python scripts/setup.py init-profile`. See [base-cv/](base-cv/) for details; replace every example value with accurate personal information.
+
 Or run the services separately:
 
 ```bash

@@ -24,6 +24,14 @@ python scripts/setup.py run
 
 The helper also supports `python scripts/setup.py test` and `python scripts/setup.py clean`.
 
+To start from the fictional base CV instead of an empty profile:
+
+```bash
+python scripts/setup.py init-profile
+```
+
+It creates a private `data/candidate_profile.json` and will not overwrite an existing profile. The example is only a structure guide: replace every placeholder and retain only claims you can support.
+
 ## 2. Manual installation
 
 From the project folder:

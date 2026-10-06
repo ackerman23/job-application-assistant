@@ -125,6 +125,10 @@ python scripts/setup.py run
 
 The helper creates `.venv`, installs `requirements.txt`, and copies `.env.example` to `.env` only when `.env` does not already exist. The equivalent manual commands are shown in [QUICKSTART.md](QUICKSTART.md).
 
+### Base CV starter
+
+[base-cv/](base-cv/) contains a fictional, public example profile for a software-and-systems engineering candidate. It is intentionally separate from private local data. To copy it into your private profile, run `python scripts/setup.py init-profile`; the command will not overwrite a profile unless `--force` is supplied. Replace all sample details and retain only truthful, supportable claims.
+
 Set `OPENAI_API_KEY` in `.env` for AI job extraction, AI-assisted matching, and cover-letter generation. Never commit `.env`.
 
 PDF downloads additionally require `latexmk` or `pdflatex`. LaTeX source can still be generated without a PDF compiler.

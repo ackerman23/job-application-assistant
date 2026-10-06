@@ -1,0 +1,175 @@
+{
+  "personal": {
+    "name": "Alex Morgan",
+    "email": "alex.morgan@example.com",
+    "phone": "+00 000 000 0000",
+    "location": "Example City, Example Country",
+    "website": "https://www.linkedin.com/in/alex-morgan",
+    "github": "https://github.com/alex-morgan",
+    "languages": [
+      "English (C1)",
+      "French (B2)",
+      "German (A2)"
+    ]
+  },
+  "education": [
+    {
+      "institution": "Example Technical University",
+      "degree": "M.Sc.",
+      "field": "Space Systems Engineering",
+      "location": "Example City, Example Country",
+      "start_date": "Oct. 2025",
+      "end_date": "Present",
+      "details": [
+        "Focus on satellite systems, mission design, and system-level analysis."
+      ]
+    },
+    {
+      "institution": "Example University",
+      "degree": "B.Eng.",
+      "field": "Software Engineering",
+      "location": "Example City, Example Country",
+      "start_date": "Sept. 2021",
+      "end_date": "Jun. 2025"
+    }
+  ],
+  "experience": [
+    {
+      "company": "Example Engineering Lab",
+      "role": "Software Engineering Intern",
+      "location": "Example City, Example Country",
+      "start_date": "Apr. 2025",
+      "end_date": "Sept. 2025",
+      "summary": "Built internal software tools that reduced repetitive analysis work.",
+      "responsibilities": [
+        "Implemented backend features and data-processing workflows for engineering applications.",
+        "Worked with engineers to turn requirements into maintainable, tested software."
+      ],
+      "technologies": [
+        "Python",
+        "FastAPI",
+        "SQL",
+        "Git"
+      ],
+      "domains": [
+        "Backend Development",
+        "Data Processing"
+      ],
+      "achievements": [
+        "Automated a recurring reporting workflow and documented the handover process."
+      ],
+      "evidence_level": "VERIFIED"
+    },
+    {
+      "company": "Example Space Systems Group",
+      "role": "Student Research Assistant",
+      "location": "Example City, Example Country",
+      "start_date": "Oct. 2025",
+      "end_date": "Present",
+      "summary": "Supporting software experiments and validation activities for satellite-system research.",
+      "responsibilities": [
+        "Prepared technical documentation and test materials for laboratory exercises."
+      ],
+      "technologies": [
+        "Python",
+        "Testing",
+        "Data Analysis"
+      ],
+      "domains": [
+        "Satellite Systems",
+        "Systems Engineering"
+      ],
+      "evidence_level": "VERIFIED"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Satellite Ground Segment Prototype",
+      "description": "Created a Python prototype for commanding and monitoring a simulated satellite platform.",
+      "domain": [
+        "Ground Segment",
+        "Satellite Systems"
+      ],
+      "technologies": [
+        "Python",
+        "TCP/UDP",
+        "Telemetry"
+      ],
+      "responsibilities": [
+        "Implemented telemetry display and communication interfaces."
+      ],
+      "achievements": [
+        "Documented setup and test procedures for repeatable demonstrations."
+      ],
+      "relevance_tags": [
+        "Python",
+        "Telemetry",
+        "Systems Integration"
+      ]
+    },
+    {
+      "name": "Applied Computer Vision Study",
+      "description": "Evaluated image-processing models using reproducible data preparation and experiment tracking.",
+      "domain": [
+        "Machine Learning",
+        "Data Analysis"
+      ],
+      "technologies": [
+        "Python",
+        "Computer Vision",
+        "Data Processing"
+      ],
+      "responsibilities": [
+        "Compared model results and recorded experiment configurations."
+      ],
+      "relevance_tags": [
+        "Python",
+        "Machine Learning",
+        "Testing"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "name": "Python",
+      "status": "VERIFIED",
+      "evidence": [
+        "Built software tools and project prototypes using Python."
+      ]
+    },
+    {
+      "name": "Data Processing",
+      "status": "VERIFIED",
+      "evidence": [
+        "Prepared data workflows for applied engineering and research projects."
+      ]
+    },
+    {
+      "name": "FastAPI",
+      "status": "FAMILIARITY",
+      "evidence": [
+        "Built a small API prototype during an internship project."
+      ]
+    },
+    {
+      "name": "Satellite Systems",
+      "status": "FAMILIARITY",
+      "evidence": [
+        "Studied satellite systems and contributed to related university projects."
+      ]
+    },
+    {
+      "name": "Git",
+      "status": "VERIFIED",
+      "evidence": [
+        "Used Git for version control in team and personal projects."
+      ]
+    }
+  ],
+  "career_direction": "Software and systems engineering roles with an interest in space technology and data-intensive applications.",
+  "interests": [
+    "Space systems",
+    "Reliable software",
+    "Applied AI"
+  ]
+}

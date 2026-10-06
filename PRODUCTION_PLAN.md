@@ -47,10 +47,10 @@ Implemented in commit `1b037cf` and pushed to `origin/main`.
 
 Goal: make setup reliable for non-developers.
 
-- Keep `.env.example` minimal and accurate.
-- Add a cross-platform setup script with `install`, `run`, `test`, and `clean` commands.
+- Keep `.env.example` minimal and accurate. Completed: obsolete database configuration was removed.
+- Add a cross-platform setup script with `install`, `run`, `test`, and `clean` commands. Completed: `scripts/setup.py` provides these commands plus `init-profile`.
 - Add a supported Python version and dependency policy.
-- Add startup validation with friendly messages for missing dependencies or API keys.
+- Add startup validation with friendly messages for missing dependencies or API keys. Completed: startup checks ports and warns about missing `.env`, API key, and optional LaTeX tooling.
 - Document optional LaTeX/PDF installation for Linux, macOS, and Windows.
 - Add a version display in the UI and API health response.
 
