@@ -8,11 +8,14 @@ New here? Start with the [Quick start](QUICKSTART.md), then use the [project gui
 
 ## Start locally
 
-Requires Python 3.12+. Create a virtual environment, install `requirements.txt`, then run:
+Requires Python 3.12+. The recommended cross-platform setup creates the virtual environment, installs dependencies, and creates a private `.env` file:
 
 ```bash
-python main.py --mode all
+python scripts/setup.py install
+python scripts/setup.py run
 ```
+
+The helper also provides `python scripts/setup.py test` and `python scripts/setup.py clean`.
 
 Or run the services separately:
 

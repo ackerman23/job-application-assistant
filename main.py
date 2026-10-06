@@ -9,16 +9,17 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-VENV_PYTHON = ROOT / ".venv" / "bin" / "python"
+VENV_PYTHON = ROOT / ".venv" / ("Scripts" if os.name == "nt" else "bin") / ("python.exe" if os.name == "nt" else "python")
+PYTHON = str(VENV_PYTHON if VENV_PYTHON.exists() else Path(sys.executable))
 
 
 def build_commands(mode: str, flask_port: int, mcp_port: int) -> list[list[str]]:
     commands: list[list[str]] = []
     if mode in {"all", "flask"}:
-        commands.append([str(VENV_PYTHON), str(ROOT / "app" / "flask_app.py"), "--port", str(flask_port)])
+        commands.append([PYTHON, str(ROOT / "app" / "flask_app.py"), "--port", str(flask_port)])
     if mode in {"all", "mcp"}:
         commands.append([
-            str(VENV_PYTHON),
+            PYTHON,
             "-m",
             "uvicorn",
             "app.api.fastapi_mcp.server:app",

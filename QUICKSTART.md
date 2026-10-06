@@ -2,7 +2,29 @@
 
 Use Flask as the primary application. FastAPI/MCP is optional and provides typed API/tool access.
 
-## 1. Install
+## 1. Install — recommended
+
+The recommended setup is the cross-platform Python helper. It creates the virtual environment, installs dependencies, and creates `.env` without overwriting an existing private configuration:
+
+```bash
+python scripts/setup.py install
+```
+
+Use `py` instead of `python` on Windows if needed:
+
+```powershell
+py scripts/setup.py install
+```
+
+Then open `.env`, add your OpenAI key, and start the application:
+
+```bash
+python scripts/setup.py run
+```
+
+The helper also supports `python scripts/setup.py test` and `python scripts/setup.py clean`.
+
+## 2. Manual installation
 
 From the project folder:
 
@@ -15,7 +37,7 @@ python -m pip install -r requirements.txt
 
 On Windows PowerShell, create the environment with `py -3.12 -m venv .venv` and activate it with `.venv\Scripts\Activate.ps1`.
 
-## 2. Configure AI features
+## 3. Configure AI features
 
 ```bash
 cp .env.example .env
@@ -30,10 +52,10 @@ OPENAI_MODEL=gpt-4o-mini
 
 Keep `.env` private. AI features include job-description analysis, evidence matching, and cover-letter generation.
 
-## 3. Start the app
+## 4. Start the app
 
 ```bash
-python main.py --mode all
+python scripts/setup.py run
 ```
 
 Open the Flask dashboard:
@@ -43,7 +65,7 @@ Open the Flask dashboard:
 - FastAPI docs: <http://127.0.0.1:8000/docs>
 - FastAPI health: <http://127.0.0.1:8000/health>
 
-## 4. Generate an application
+## 5. Generate an application
 
 1. Edit or paste your candidate profile in the dashboard.
 2. Paste a complete job description.
@@ -55,14 +77,14 @@ Open the Flask dashboard:
 
 Only profile-supported claims should be used as professional experience. Keep studied or introductory skills marked as `FAMILIARITY`.
 
-## 5. PDF exports
+## 6. PDF exports
 
 Install `latexmk` or `pdflatex` for PDF downloads. The application still produces LaTeX source when a PDF compiler is unavailable.
 
-## 6. Run tests
+## 7. Run tests
 
 ```bash
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
+python scripts/setup.py test
 ```
 
 For the full setup and troubleshooting guide, see [PROJECT_GUIDE.md](PROJECT_GUIDE.md).

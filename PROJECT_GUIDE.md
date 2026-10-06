@@ -116,13 +116,14 @@ tests/                  Regression and workflow tests
 
 ## Installation
 
+Recommended setup (Linux, macOS, and Windows):
+
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-cp .env.example .env
+python scripts/setup.py install
+python scripts/setup.py run
 ```
+
+The helper creates `.venv`, installs `requirements.txt`, and copies `.env.example` to `.env` only when `.env` does not already exist. The equivalent manual commands are shown in [QUICKSTART.md](QUICKSTART.md).
 
 Set `OPENAI_API_KEY` in `.env` for AI job extraction, AI-assisted matching, and cover-letter generation. Never commit `.env`.
 

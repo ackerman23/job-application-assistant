@@ -25,14 +25,13 @@ A friend should be able to:
 
 The project should be safe, predictable, documented, and easy to maintain without introducing unnecessary infrastructure.
 
-## Phase 1: Remove unnecessary infrastructure
+## Phase 1: Remove unnecessary infrastructure — completed
 
 Goal: make the application genuinely database-free.
 
-- Replace database-backed application history with local JSON or filesystem metadata only if history is still needed.
-- Otherwise remove the unused database module, SQLAlchemy dependency, database configuration, database routes, and database documentation.
+- Removed the unused database module, SQLAlchemy dependency, database configuration, database routes, and database documentation.
 - Keep generated artifacts under the local `data/applications/` directory.
-- Add a clear reset/export workflow for local files.
+- Local generated artifacts remain resettable by deleting `data/applications/` contents.
 - Ensure every friend has an isolated local profile and output directory.
 
 Acceptance criteria:
@@ -42,12 +41,14 @@ Acceptance criteria:
 - CV, cover-letter, and analysis workflows still work.
 - Tests do not require a database.
 
+Implemented in commit `1b037cf` and pushed to `origin/main`.
+
 ## Phase 2: Installation and configuration quality
 
 Goal: make setup reliable for non-developers.
 
 - Keep `.env.example` minimal and accurate.
-- Add a setup script or Makefile with `install`, `run`, `test`, and `clean` commands.
+- Add a cross-platform setup script with `install`, `run`, `test`, and `clean` commands.
 - Add a supported Python version and dependency policy.
 - Add startup validation with friendly messages for missing dependencies or API keys.
 - Document optional LaTeX/PDF installation for Linux, macOS, and Windows.
