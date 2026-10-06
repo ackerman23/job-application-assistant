@@ -166,3 +166,7 @@ When adding a feature:
 6. Run the complete test suite before committing.
 
 Keep evidence rules and privacy boundaries intact when modifying generation logic.
+
+## Professionalization roadmap
+
+The target product is a database-free local application that friends can run independently. See [PRODUCTION_PLAN.md](PRODUCTION_PLAN.md) for the staged plan, including removal of the current legacy application-history database path, one-command setup, CI, privacy, testing, and release quality.

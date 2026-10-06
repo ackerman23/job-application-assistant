@@ -47,6 +47,7 @@ Profile data, generated documents, and the SQLite database are stored locally. W
 - [Quick start](QUICKSTART.md): install and run the application.
 - [Project guide](PROJECT_GUIDE.md): architecture, workflows, privacy, testing, and troubleshooting.
 - [Architecture](ARCHITECTURE.md): detailed layering and future design boundaries.
+- [Professionalization plan](PRODUCTION_PLAN.md): database-free product direction and release roadmap.
 
 ## Notes
 
