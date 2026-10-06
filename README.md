@@ -2,9 +2,9 @@
 
 A local-first, evidence-led job application assistant. Flask is the primary browser application. FastAPI provides a thin typed MCP/tooling layer, while the core matching, document generation, and profile logic stays shared and reusable.
 
-The old Streamlit prototype is retained only for reference and is not a supported runtime. Use the Flask dashboard at `http://127.0.0.1:5000/dashboard`.
+Use the Flask dashboard at `http://127.0.0.1:5000/dashboard`. FastAPI provides typed API and MCP access.
 
-New here? Start with the [Quick start](QUICKSTART.md), then use the full [TUTORIAL.md](TUTORIAL.md) for setup details and troubleshooting.
+New here? Start with the [Quick start](QUICKSTART.md), then use the [project guide](PROJECT_GUIDE.md) for architecture, workflows, privacy, and troubleshooting.
 
 ## Start locally
 
@@ -41,6 +41,12 @@ Profile data, generated documents, and the SQLite database are stored locally. W
 - A CV is rendered from profile evidence. Selected requirements determine skill placement and prioritize relevant experience; unsupported requirements can be added explicitly as skills when the user chooses them. Existing experience wording is preserved while relevant bullets are prioritized.
 - Each analyzed application is recorded in SQLite. Generated reports include the job text, typed analyses, learning plan, and change log.
 - The API is available at `/docs` when running FastAPI.
+
+## Documentation
+
+- [Quick start](QUICKSTART.md): install and run the application.
+- [Project guide](PROJECT_GUIDE.md): architecture, workflows, privacy, testing, and troubleshooting.
+- [Architecture](ARCHITECTURE.md): detailed layering and future design boundaries.
 
 ## Notes
 

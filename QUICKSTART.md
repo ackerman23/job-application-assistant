@@ -65,6 +65,4 @@ Install `latexmk` or `pdflatex` for PDF downloads. The application still produce
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
 ```
 
-The old `streamlit_app.py` is a deprecated prototype. Use the Flask dashboard instead.
-
-For the full setup and troubleshooting guide, see [TUTORIAL.md](TUTORIAL.md).
+For the full setup and troubleshooting guide, see [PROJECT_GUIDE.md](PROJECT_GUIDE.md).

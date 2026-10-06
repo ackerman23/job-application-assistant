@@ -14,7 +14,7 @@ The project has a useful separation of concerns already:
 - Service modules perform job-description analysis, evidence matching, and document generation.
 - `app/services/workflow.py` contains shared workflow functions.
 
-The main architectural gap was inconsistent orchestration. The Flask dashboard and Flask document routes now use the application services in `app/services/application_services.py`; FastAPI/MCP remains a thin typed adapter over the shared workflow and document services. Streamlit is retained only as a deprecated prototype.
+The main architectural gap was inconsistent orchestration. The Flask dashboard and Flask document routes now use the application services in `app/services/application_services.py`; FastAPI/MCP remains a thin typed adapter over the shared workflow and document services.
 
 ## Recommended layers
 

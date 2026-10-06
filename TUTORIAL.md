@@ -4,7 +4,7 @@ This guide is for the project's current local development setup. Your candidate 
 
 For the shortest setup path, see [QUICKSTART.md](QUICKSTART.md).
 
-Flask is the supported primary web application. FastAPI provides the typed MCP/tooling API. The old Streamlit prototype is retained for reference only and is not part of the supported runtime.
+Flask is the supported primary web application. FastAPI provides the typed MCP/tooling API.
 
 ## Requirements
 
@@ -106,7 +106,6 @@ The environment variable prevents unrelated system-wide pytest plugins from bein
 - **PDF compilation fails**: install `latexmk`/`pdflatex`, or use the saved `.tex` file directly.
 - **Profile JSON won't save**: validate the JSON syntax and ensure values conform to `app/models/schemas.py`.
 - **Match output seems incomplete**: the local analyzer uses a limited vocabulary and wording cues. Check the extracted requirements against the job description before relying on the score.
-- **You found `streamlit_app.py`**: it is a deprecated prototype, not a second supported UI. Use Flask at `/dashboard`.
 
 ## Data and privacy
 
