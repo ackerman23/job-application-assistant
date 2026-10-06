@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+config/user-settings.yaml
 data/applications/*
 !data/applications/.gitkeep
 data/*.db

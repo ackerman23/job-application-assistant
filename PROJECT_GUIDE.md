@@ -125,6 +125,8 @@ python scripts/setup.py run
 
 The helper creates `.venv`, installs `requirements.txt`, and copies `.env.example` to `.env` only when `.env` does not already exist. The equivalent manual commands are shown in [QUICKSTART.md](QUICKSTART.md).
 
+It also copies [config/user-settings.example.yaml](config/user-settings.example.yaml) to the private, Git-ignored `config/user-settings.yaml` file. Use `python scripts/setup.py init-settings` to create the template later, or use `--force` only when deliberately replacing local settings.
+
 ### Base CV starter
 
 [base-cv/](base-cv/) contains a fictional, public example profile for a software-and-systems engineering candidate. It is intentionally separate from private local data. To copy it into your private profile, run `python scripts/setup.py init-profile`; the command will not overwrite a profile unless `--force` is supplied. Replace all sample details and retain only truthful, supportable claims.
@@ -132,6 +134,17 @@ The helper creates `.venv`, installs `requirements.txt`, and copies `.env.exampl
 Set `OPENAI_API_KEY` in `.env` for AI job extraction, AI-assisted matching, and cover-letter generation. Never commit `.env`.
 
 PDF downloads additionally require `latexmk` or `pdflatex`. LaTeX source can still be generated without a PDF compiler.
+
+### User settings YAML
+
+`config/user-settings.yaml` controls non-secret personal preferences:
+
+- Default job-match categories selected for a CV.
+- Whether explicitly selected missing requirements appear as CV skills.
+- Maximum experience and project entries in a generated CV.
+- Cover-letter tone, technical detail, target length, hiring-manager review, priority skills, and extra writing instructions.
+
+The YAML file is validated when the app uses it. Invalid fields produce a message naming the settings file and the failed rule. Do not put API keys, personal profile data, or job descriptions in it. Preferences guide the output but never override evidence, honesty, or factuality rules.
 
 ## Testing
 

@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from app.core.config import EDITOR_MODEL, OPENAI_API_KEY, OPENAI_MODEL, ROOT, WRITING_MODEL
+from app.core.settings import get_user_settings
 from app.models.schemas import CandidateProfile, CompanyResearch, JobAnalysis, MatchAnalysis, MatchType
 from app.services.cover_letter_engine import CoverLetterIntelligenceEngine
 
@@ -112,6 +113,7 @@ def _approved_context(
         for item in match.matches
         if item.match_type in (MatchType.VERIFIED, MatchType.TRANSFERABLE, MatchType.FAMILIARITY)
     ]
+    settings = get_user_settings().cover_letter
     return {
         "candidate": profile.model_dump(mode="json"),
         "job": job.model_dump(mode="json"),
@@ -127,6 +129,13 @@ def _approved_context(
         "voice_profile": voice.model_dump(mode="json"),
         "learning_gaps": learning_gaps,
         "supported_requirements": supported_requirements,
+        "user_preferences": {
+            "tone": settings.tone,
+            "technical_detail": settings.technical_detail,
+            "target_word_count": settings.target_word_count,
+            "focus_skills": settings.focus_skills,
+            "custom_instructions": settings.custom_instructions,
+        },
         "rules": "Use only profile, job description, applicant-note facts, and verified research facts. Never invent details, tools, outcomes, metrics, motivations, dates, company knowledge, teams, customers, or proprietary systems. Familiarity may only be described as familiarity. Do not represent transferable experience as direct experience. Missing requirements may be named, but only as a clearly acknowledged learning gap, learning goal, or motivation to develop; never present them as current experience. Prefer one or two relevant gaps over listing every gap. Preserve supported and selected skill/tool wording when it is useful to the letter.",
     }
 
@@ -140,10 +149,20 @@ def generate_cover_letter(
     writing_samples: list[str] | None = None,
 ) -> str:
     context = _approved_context(profile, job, match, applicant_notes, company_research, writing_samples)
+    settings = get_user_settings().cover_letter
+    system_prompt = (PROMPTS / "cover_letter.txt").read_text(encoding="utf-8")
+    system_prompt += (
+        "\n\nUSER PREFERENCES\n"
+        "Apply these preferences when they do not conflict with the evidence, honesty, and factuality rules above. "
+        f"Tone: {settings.tone}. Technical detail: {settings.technical_detail}. "
+        f"Target length: approximately {settings.target_word_count} words. "
+        f"Prioritize these supported themes when relevant: {', '.join(settings.focus_skills) or 'none specified'}. "
+        f"Additional user instructions: {settings.custom_instructions or 'none'}."
+    )
     from openai import APIConnectionError, AuthenticationError, RateLimitError
     client = _client()
     try:
-        response = client.chat.completions.create(model=WRITING_MODEL, temperature=0.65, messages=[{"role": "system", "content": (PROMPTS / "cover_letter.txt").read_text()}, {"role": "user", "content": json.dumps(context, ensure_ascii=False)}])
+        response = client.chat.completions.create(model=WRITING_MODEL, temperature=0.65, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": json.dumps(context, ensure_ascii=False)}])
     except AuthenticationError as exc:
         raise RuntimeError("OpenAI rejected the API key. Check that it is active and belongs to the intended OpenAI project, then restart the app.") from exc
     except RateLimitError as exc:
@@ -152,7 +171,7 @@ def generate_cover_letter(
         raise RuntimeError("Could not connect to the OpenAI API. Check your internet connection and try again.") from exc
     result = response.choices[0].message.content or ""
     quality = CoverLetterIntelligenceEngine().quality_report(result, job, match)
-    if quality.requires_review:
+    if settings.use_hiring_manager_review and quality.requires_review:
         editor_context = {
             **context,
             "draft_to_edit": result,
@@ -164,7 +183,7 @@ def generate_cover_letter(
                 model=EDITOR_MODEL,
                 temperature=0.65,
                 messages=[
-                    {"role": "system", "content": (PROMPTS / "cover_letter.txt").read_text()},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": json.dumps(editor_context, ensure_ascii=False)},
                 ],
             )
@@ -204,6 +223,7 @@ def validate_cover_letter_style(text: str) -> list[str]:
 
 
 def generate_cv_tex(profile: CandidateProfile, job: JobAnalysis, match: MatchAnalysis, selected_requirements: list[str] | None = None) -> str:
+    settings = get_user_settings().cv
     env = Environment(loader=FileSystemLoader(ROOT / "templates" / "cv"), autoescape=select_autoescape())
     env.filters["latex_escape"] = lambda value: str(value).replace("\\", r"\textbackslash{}").replace("&", r"\&").replace("%", r"\%").replace("$", r"\$").replace("#", r"\#").replace("_", r"\_").replace("{", r"\{").replace("}", r"\}")
     selection_gate = selected_requirements is not None
@@ -211,6 +231,7 @@ def generate_cv_tex(profile: CandidateProfile, job: JobAnalysis, match: MatchAna
     selected_matches = [
         item for item in match.matches
         if item.match_type in (MatchType.VERIFIED, MatchType.TRANSFERABLE, MatchType.FAMILIARITY, MatchType.MISSING)
+        and (settings.include_explicitly_selected_missing_skills or item.match_type != MatchType.MISSING)
         and (not selection_gate or _normalize_requirement(item.requirement) in requested)
     ]
     targets = [m.requirement for m in selected_matches if len(m.requirement.split()) <= 7]
@@ -285,8 +306,8 @@ def generate_cv_tex(profile: CandidateProfile, job: JobAnalysis, match: MatchAna
         }))
 
     tailored = profile.model_copy(update={
-        "experience": tailored_experience,
-        "projects": sorted(profile.projects, key=rank, reverse=True),
+        "experience": tailored_experience[:settings.max_experience_entries],
+        "projects": sorted(profile.projects, key=rank, reverse=True)[:settings.max_project_entries],
         "skills": cv_skills,
     })
     return env.get_template("default_cv.tex.j2").render(candidate=tailored, job=job, match=match, skill_groups=skill_groups)

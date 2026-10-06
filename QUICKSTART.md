@@ -24,6 +24,8 @@ python scripts/setup.py run
 
 The helper also supports `python scripts/setup.py test` and `python scripts/setup.py clean`.
 
+It also creates a private `config/user-settings.yaml`. Use this YAML file to control CV selection defaults, document length, cover-letter tone, technical emphasis, focus skills, and optional writing instructions. API keys stay in `.env`, not the YAML file.
+
 To start from the fictional base CV instead of an empty profile:
 
 ```bash
@@ -59,6 +61,10 @@ OPENAI_MODEL=gpt-4o-mini
 ```
 
 Keep `.env` private. AI features include job-description analysis, evidence matching, and cover-letter generation.
+
+## Personal settings
+
+Edit `config/user-settings.yaml` to tailor document preferences. The committed [example settings](config/user-settings.example.yaml) describe every supported option. Settings complement the app's evidence rules; they cannot turn unsupported skills or experience into verified claims.
 
 ## 4. Start the app
 

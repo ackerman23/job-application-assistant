@@ -15,7 +15,7 @@ python scripts/setup.py install
 python scripts/setup.py run
 ```
 
-The helper also provides `python scripts/setup.py test` and `python scripts/setup.py clean`.
+The helper also provides `python scripts/setup.py test`, `python scripts/setup.py clean`, and `python scripts/setup.py init-settings`.
 
 To begin with a fictional base CV rather than an empty profile, run `python scripts/setup.py init-profile`. See [base-cv/](base-cv/) for details; replace every example value with accurate personal information.
 
@@ -37,6 +37,12 @@ On first launch, an empty `data/candidate_profile.json` is created. Edit the pro
 ```
 
 Profile data and generated documents are stored locally as JSON and files; no database is required. When AI-assisted analysis or cover-letter generation is used, job text and relevant candidate profile evidence are sent to the configured OpenAI API. `data/applications/` and `.env` are ignored by Git. Do not commit private application materials.
+
+## Personal settings
+
+The setup command creates a private [user settings template](config/user-settings.example.yaml) at `config/user-settings.yaml`. Use it to control CV selection defaults, the number of experience/project entries, cover-letter tone, technical detail, target length, priority skills, and extra writing instructions. This private file is ignored by Git.
+
+Settings guide the generated documents but do not replace the core evidence rules: unsupported experience, credentials, metrics, and skills must not be presented as verified facts.
 
 ## Current MVP behavior
 

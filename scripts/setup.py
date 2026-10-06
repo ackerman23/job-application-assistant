@@ -17,6 +17,8 @@ ENV_EXAMPLE = ROOT / ".env.example"
 ENV_FILE = ROOT / ".env"
 PROFILE_TEMPLATE = ROOT / "base-cv" / "candidate_profile.example.json"
 PROFILE_FILE = ROOT / "data" / "candidate_profile.json"
+SETTINGS_TEMPLATE = ROOT / "config" / "user-settings.example.yaml"
+SETTINGS_FILE = ROOT / "config" / "user-settings.yaml"
 
 
 def venv_python() -> Path:
@@ -46,6 +48,12 @@ def install() -> None:
         print(f"Created {ENV_FILE}. Add OPENAI_API_KEY before using AI features.")
     else:
         print(f"Keeping existing {ENV_FILE}")
+
+    if not SETTINGS_FILE.exists():
+        shutil.copyfile(SETTINGS_TEMPLATE, SETTINGS_FILE)
+        print(f"Created {SETTINGS_FILE}. Edit it to personalize CV and cover-letter preferences.")
+    else:
+        print(f"Keeping existing {SETTINGS_FILE}")
 
     print("Setup complete. Start the app with: python scripts/setup.py run")
 
@@ -133,6 +141,14 @@ def init_profile(force: bool) -> None:
     print(f"Created private profile from the fictional starter at {PROFILE_FILE}. Replace all example information before use.")
 
 
+def init_settings(force: bool) -> None:
+    if SETTINGS_FILE.exists() and not force:
+        raise SystemExit(f"Settings already exist at {SETTINGS_FILE}. Edit them there, or use --force to replace them deliberately.")
+    SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(SETTINGS_TEMPLATE, SETTINGS_FILE)
+    print(f"Created private settings from {SETTINGS_TEMPLATE} at {SETTINGS_FILE}.")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Set up and run the local Job Application Assistant.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -146,6 +162,8 @@ def main() -> int:
     subparsers.add_parser("clean", help="Remove generated Python/test caches without touching user data")
     profile_parser = subparsers.add_parser("init-profile", help="Copy the fictional base-CV profile into private local data")
     profile_parser.add_argument("--force", action="store_true", help="Replace an existing private profile")
+    settings_parser = subparsers.add_parser("init-settings", help="Copy the user-settings template into private local configuration")
+    settings_parser.add_argument("--force", action="store_true", help="Replace existing private settings")
     args = parser.parse_args()
 
     if args.command == "install":
@@ -158,6 +176,8 @@ def main() -> int:
         clean()
     elif args.command == "init-profile":
         init_profile(args.force)
+    elif args.command == "init-settings":
+        init_settings(args.force)
     return 0
 
 

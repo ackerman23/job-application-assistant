@@ -1,0 +1,27 @@
+# Private, user-controlled preferences for the Job Application Assistant.
+# Copy to config/user-settings.yaml (the setup command does this automatically).
+# Never store API keys here; keep them in .env.
+
+cv:
+  # Default job-match categories added when no manual selection is supplied.
+  default_selected_match_types:
+    - VERIFIED
+    - TRANSFERABLE
+    - FAMILIARITY
+  # Preserve the app's explicit-selection behavior for missing requirements.
+  include_explicitly_selected_missing_skills: true
+  # Defaults preserve up to ten entries; lower these values for a shorter CV.
+  max_experience_entries: 10
+  max_project_entries: 10
+
+cover_letter:
+  # These guide the writer but never permit invented experience or credentials.
+  tone: professional
+  technical_detail: high
+  target_word_count: 375
+  use_hiring_manager_review: true
+  # Add skills, domains, or themes to prioritize when supported by the profile.
+  focus_skills: []
+  # Optional extra instructions, for example: "Use concise British English."
+  # Core evidence and honesty requirements still apply.
+  custom_instructions: ""

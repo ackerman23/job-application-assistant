@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.models.schemas import CandidateProfile, CompanyResearch, JobAnalysis, MatchAnalysis, MatchType
+from app.core.settings import get_user_settings
 from app.services.jd_analyzer import analyze_job
 from app.services.generation import generate_change_log, generate_cover_letter, generate_cv_tex
 from app.services.matching_engine import match_job
@@ -36,12 +37,13 @@ def generate_cv_document(
     An omitted selection includes supported/familiarity requirements by default;
     an explicitly empty selection stays empty.
     """
+    settings = get_user_settings().cv
     selected = selected_requirements
     if selected is None:
         selected = [
             item.requirement
             for item in match.matches
-            if item.match_type not in (MatchType.MISSING, MatchType.CONFLICT)
+            if item.match_type in settings.default_selected_match_types
         ]
     return {
         "cv_latex": generate_cv_tex(profile, job, match, selected),
