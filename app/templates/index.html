@@ -1,39 +1,57 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Job Application Assistant</title>
-    <style>
-      body { font-family: Arial, sans-serif; margin: 2rem; background: #f7f9fc; color: #102033; }
-      main { max-width: 960px; margin: 0 auto; background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 8px 24px rgba(16, 32, 51, 0.08); }
-      h1 { margin-top: 0; }
-      code { background: #eef2f7; padding: 0.15rem 0.35rem; border-radius: 6px; }
-      ul { line-height: 1.8; }
-      .panel { margin-top: 1.5rem; padding: 1rem 1.2rem; background: #eef5ff; border-left: 4px solid #3b82f6; border-radius: 8px; }
-    </style>
-  </head>
-  <body>
-    <main>
-      <h1>Job Application Assistant</h1>
-      <p>Flask is the primary web application. FastAPI provides a thin MCP/tooling service for typed integrations.</p>
+{% extends "base.html" %}
 
-      <div class="panel">
-        <strong>Available entrypoints</strong>
-        <ul>
-          <li>Flask dashboard: <code>/dashboard</code></li>
-          <li>Flask UI: <code>/</code></li>
-          <li>Health check: <code>/health</code></li>
-          <li>Profiles: <code>/profiles/</code></li>
-          <li>Jobs: <code>/jobs/analyze</code></li>
-          <li>Applications: <code>/applications/</code></li>
-          <li>Documents: <code>/documents/generate-cv</code></li>
-          <li>MCP server: <code>http://127.0.0.1:8000</code></li>
-        </ul>
-      </div>
+{% block title %}Job Application Assistant{% endblock %}
 
-      <p><a href="/dashboard">Open the dashboard</a> to edit the profile, paste a job description, review evidence matches, and generate the tailored CV.</p>
-      <p>This app keeps the evidence-first workflow: profile evidence → job analysis → match scoring → tailored CV generation.</p>
-    </main>
-  </body>
-</html>
+{% block styles %}
+<style>
+  .welcome { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(17rem, 0.75fr); gap: clamp(2rem, 6vw, 5rem); align-items: center; min-height: 62vh; }
+  .welcome h1 { max-width: 12ch; margin: 0; color: var(--ink-950); font-size: clamp(2.5rem, 5.5vw, 4.8rem); line-height: 1.02; letter-spacing: -0.06em; }
+  .welcome__copy { max-width: 58ch; margin: 1.35rem 0 0; color: var(--ink-700); font-size: 1.12rem; line-height: 1.7; }
+  .welcome__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
+  .trust-note { display: flex; align-items: center; gap: 0.55rem; margin: 1.1rem 0 0; color: var(--ink-600); font-size: 0.9rem; }
+  .trust-note::before { width: 0.55rem; height: 0.55rem; content: ""; background: var(--teal-700); border-radius: 50%; }
+  .workflow-card { padding: clamp(1.4rem, 3vw, 2rem); background: var(--ink-950); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); color: #fff; }
+  .workflow-card h2 { margin: 0; font-size: 1.1rem; }
+  .workflow-card > p { margin: 0.4rem 0 1.25rem; color: #b9c9d8; font-size: 0.92rem; }
+  .workflow-list { display: grid; gap: 0.8rem; margin: 0; padding: 0; list-style: none; counter-reset: steps; }
+  .workflow-list li { display: grid; grid-template-columns: 2rem 1fr; gap: 0.8rem; align-items: start; padding: 0.8rem 0; border-top: 1px solid rgba(217, 226, 236, 0.18); counter-increment: steps; }
+  .workflow-list li::before { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; content: counter(steps); color: var(--ink-950); background: var(--teal-100); border-radius: 50%; font-size: 0.78rem; font-weight: 800; }
+  .workflow-list strong, .workflow-list span { display: block; }
+  .workflow-list span { margin-top: 0.18rem; color: #b9c9d8; font-size: 0.86rem; line-height: 1.45; }
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding-top: 2rem; border-top: 1px solid var(--line); }
+  .principle { padding: 1rem 0.25rem; }
+  .principle h2 { margin: 0; color: var(--ink-950); font-size: 1rem; }
+  .principle p { margin: 0.45rem 0 0; color: var(--ink-600); font-size: 0.93rem; line-height: 1.6; }
+  @media (max-width: 780px) { .welcome { grid-template-columns: 1fr; min-height: auto; } .welcome h1 { max-width: 14ch; } .principles { grid-template-columns: 1fr; gap: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="welcome" aria-labelledby="welcome-title">
+  <div>
+    <p class="eyebrow">Private, evidence-led application support</p>
+    <h1 id="welcome-title">Make every application easier to review.</h1>
+    <p class="welcome__copy">Bring your profile and a job description together in one local workspace. Review the evidence behind every suggested skill before producing a tailored CV or cover letter.</p>
+    <div class="welcome__actions">
+      <a class="button button--primary" href="/dashboard">Open your workspace</a>
+      <a class="button button--secondary" href="/health">Check service health</a>
+    </div>
+    <p class="trust-note">Your profile and generated documents stay on this machine.</p>
+  </div>
+  <aside class="workflow-card" aria-labelledby="workflow-title">
+    <h2 id="workflow-title">A clear review workflow</h2>
+    <p>Deliberate steps, truthful claims, and final control remain with you.</p>
+    <ol class="workflow-list">
+      <li><div><strong>Prepare your profile</strong><span>Record only the experience and skills you can support.</span></div></li>
+      <li><div><strong>Analyze the role</strong><span>Extract technical requirements from the job description.</span></div></li>
+      <li><div><strong>Review the evidence</strong><span>Choose what belongs in the tailored document.</span></div></li>
+      <li><div><strong>Generate and check</strong><span>Review the CV or letter before you download it.</span></div></li>
+    </ol>
+  </aside>
+</section>
+<section class="principles" aria-label="Product principles">
+  <article class="principle"><h2>Evidence first</h2><p>Skills remain visibly classified as verified, transferable, familiarity, or missing.</p></article>
+  <article class="principle"><h2>Local by default</h2><p>Your private profile, preferences, and application artifacts are stored locally.</p></article>
+  <article class="principle"><h2>Human review required</h2><p>Generated documents are drafts to inspect and improve before they are used.</p></article>
+</section>
+{% endblock %}

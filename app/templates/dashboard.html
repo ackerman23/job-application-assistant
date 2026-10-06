@@ -1,462 +1,260 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard | Job Application Assistant</title>
-    <style>
-      :root {
-        --bg: #f3f7fb;
-        --panel: rgba(255, 255, 255, 0.88);
-        --panel-strong: #ffffff;
-        --border: #dfeaf7;
-        --text: #10233d;
-        --muted: #5f6f86;
-        --primary: #2563eb;
-        --primary-dark: #1d4ed8;
-        --success: #0f766e;
-        --warning: #b45309;
-        --danger: #b91c1c;
-        --shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-      }
+{% extends "base.html" %}
 
-      * { box-sizing: border-box; }
+{% block title %}Workspace | Job Application Assistant{% endblock %}
 
-      body {
-        margin: 0;
-        font-family: Inter, "Segoe UI", Arial, sans-serif;
-        background: linear-gradient(180deg, #edf4ff 0%, #f7fafc 100%);
-        color: var(--text);
-      }
+{% block styles %}
+<style>
+  .workspace-header { display: flex; justify-content: space-between; gap: 2rem; align-items: end; margin-bottom: 1.75rem; }
+  .workspace-header h1 { margin: 0; font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -0.05em; line-height: 1.05; }
+  .workspace-header p:not(.eyebrow) { max-width: 60ch; margin: 0.6rem 0 0; color: var(--ink-600); }
+  .privacy-badge { display: inline-flex; align-items: center; gap: 0.45rem; flex: 0 0 auto; padding: 0.55rem 0.75rem; color: var(--teal-800); background: var(--teal-100); border-radius: 999px; font-size: 0.82rem; font-weight: 750; }
+  .privacy-badge::before { content: ""; width: 0.45rem; height: 0.45rem; background: currentColor; border-radius: 50%; }
 
-      .container {
-        max-width: 1280px;
-        margin: 0 auto;
-        padding: 32px 20px 48px;
-      }
+  .workflow-nav { display: flex; gap: 0.4rem; margin: 0 0 1.4rem; padding: 0.45rem; overflow-x: auto; background: #eaf0f5; border-radius: 0.8rem; }
+  .workflow-nav a { flex: 1 0 max-content; padding: 0.65rem 0.8rem; color: var(--ink-600); border-radius: 0.55rem; font-size: 0.86rem; font-weight: 750; text-align: center; text-decoration: none; }
+  .workflow-nav a:hover, .workflow-nav a:focus-visible { color: var(--ink-950); background: #fff; }
 
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 20px;
-        padding: 18px 22px;
-        background: rgba(255, 255, 255, 0.8);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(8px);
-      }
+  .workspace-grid { display: grid; grid-template-columns: minmax(19rem, 0.9fr) minmax(0, 1.25fr); gap: 1.25rem; align-items: start; }
+  .stack { display: grid; gap: 1.25rem; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+  .card__header { display: flex; justify-content: space-between; gap: 1rem; padding: 1.35rem 1.35rem 1rem; border-bottom: 1px solid var(--line); }
+  .card__header h2 { margin: 0; font-size: 1.12rem; letter-spacing: -0.02em; }
+  .card__header p { margin: 0.3rem 0 0; color: var(--ink-600); font-size: 0.9rem; }
+  .card__body { padding: 1.35rem; }
+  .step-number { display: grid; width: 1.85rem; height: 1.85rem; flex: 0 0 auto; place-items: center; color: #fff; background: var(--ink-950); border-radius: 50%; font-size: 0.78rem; font-weight: 800; }
+  .card__heading { display: flex; gap: 0.7rem; }
 
-      .topbar h1 {
-        margin: 0;
-        font-size: clamp(1.5rem, 2vw, 2.2rem);
-      }
+  .field-group + .field-group { margin-top: 1.35rem; }
+  .field-label { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem; color: var(--ink-800); font-size: 0.92rem; font-weight: 750; }
+  .field-help { color: var(--ink-600); font-size: 0.83rem; font-weight: 500; }
+  textarea { display: block; width: 100%; min-height: 12rem; padding: 0.85rem 0.95rem; color: var(--ink-950); background: var(--surface-muted); border: 1px solid var(--line); border-radius: 0.7rem; font: 0.9rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize: vertical; transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease; }
+  textarea:hover { border-color: var(--ink-400); }
+  textarea:focus { background: #fff; border-color: var(--blue-700); box-shadow: 0 0 0 3px rgba(23, 92, 211, 0.14); outline: none; }
+  #job_text, #applicant_notes, #cover_letter_text { font-family: inherit; }
+  #job_text { min-height: 13rem; }
+  #applicant_notes { min-height: 7rem; }
+  .input-meta { display: flex; justify-content: space-between; gap: 0.75rem; margin-top: 0.4rem; color: var(--ink-600); font-size: 0.78rem; }
 
-      .topbar small {
-        display: block;
-        color: var(--muted);
-        margin-top: 4px;
-      }
+  .action-bar { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+  .action-bar .button { border: 0; }
+  .action-bar .button--secondary { border: 1px solid var(--line); }
+  .button[aria-busy="true"] { cursor: wait; opacity: 0.8; }
 
-      .actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
+  .alert { display: grid; grid-template-columns: auto 1fr; gap: 0.7rem; padding: 1rem 1.1rem; color: var(--red-700); background: var(--red-100); border: 1px solid #fecdca; border-radius: var(--radius-md); }
+  .alert strong { display: block; margin-bottom: 0.15rem; }
+  .alert__icon { font-weight: 900; }
+  .empty-state { display: grid; gap: 0.6rem; min-height: 21rem; place-content: center; padding: 2rem; color: var(--ink-600); text-align: center; }
+  .empty-state__icon { display: grid; width: 3rem; height: 3rem; margin: 0 auto; place-items: center; color: var(--teal-800); background: var(--teal-100); border-radius: 1rem; font-size: 1.25rem; font-weight: 800; }
+  .empty-state h3 { margin: 0.25rem 0 0; color: var(--ink-950); font-size: 1.05rem; }
+  .empty-state p { max-width: 34ch; margin: 0; }
 
-      .actions a {
-        text-decoration: none;
-      }
+  .role-summary { display: grid; grid-template-columns: 1fr auto; gap: 1rem; padding: 1rem; background: var(--surface-muted); border: 1px solid var(--line); border-radius: var(--radius-md); }
+  .role-summary h3 { margin: 0; font-size: 1.05rem; }
+  .role-summary p { margin: 0.25rem 0 0; color: var(--ink-600); font-size: 0.9rem; }
+  .metric { text-align: right; }
+  .metric strong { display: block; color: var(--teal-800); font-size: 1.55rem; line-height: 1; }
+  .metric span { color: var(--ink-600); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .analysis-meta { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.9rem 0; }
+  .tag { display: inline-flex; align-items: center; padding: 0.35rem 0.55rem; color: var(--ink-700); background: #edf2f7; border-radius: 999px; font-size: 0.76rem; font-weight: 750; }
+  .tag--method { color: var(--blue-700); background: var(--blue-100); }
+  .analysis-summary { margin: 0 0 1.1rem; color: var(--ink-700); font-size: 0.93rem; }
 
-      button {
-        border: none;
-        border-radius: 12px;
-        padding: 0.8rem 1.15rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-      }
+  .selection-summary { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0 0 0.9rem; padding: 0.75rem 0.85rem; color: var(--ink-700); background: var(--teal-100); border-radius: 0.65rem; font-size: 0.86rem; }
+  .selection-summary strong { color: var(--teal-800); }
+  .match-list { display: grid; gap: 0.75rem; }
+  .match { position: relative; padding: 1rem; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-md); }
+  .match::before { position: absolute; top: 0; bottom: 0; left: 0; width: 4px; content: ""; background: var(--ink-400); }
+  .match--verified::before { background: var(--teal-700); }
+  .match--transferable::before { background: var(--blue-700); }
+  .match--familiarity::before { background: var(--amber-700); }
+  .match--missing::before { background: var(--red-700); }
+  .match--conflict::before { background: var(--violet-700); }
+  .match__header { display: flex; justify-content: space-between; gap: 0.8rem; align-items: start; padding-left: 0.25rem; }
+  .match__header h3 { margin: 0; font-size: 0.98rem; }
+  .chip { display: inline-flex; align-items: center; padding: 0.28rem 0.48rem; border-radius: 999px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.04em; white-space: nowrap; }
+  .chip--verified { color: var(--teal-800); background: var(--teal-100); }
+  .chip--transferable { color: var(--blue-700); background: var(--blue-100); }
+  .chip--familiarity { color: var(--amber-700); background: var(--amber-100); }
+  .chip--missing { color: var(--red-700); background: var(--red-100); }
+  .chip--conflict { color: var(--violet-700); background: var(--violet-100); }
+  .importance { display: block; margin-top: 0.2rem; color: var(--ink-600); font-size: 0.74rem; font-weight: 750; letter-spacing: 0.06em; text-transform: uppercase; }
+  .evidence { margin: 0.8rem 0 0; padding: 0.7rem 0.75rem 0.7rem 1.8rem; color: var(--ink-700); background: var(--surface-muted); border-radius: 0.55rem; font-size: 0.86rem; }
+  .evidence li + li { margin-top: 0.35rem; }
+  .suggestion { margin-top: 0.75rem; padding: 0.75rem; color: var(--ink-700); background: var(--surface-muted); border: 1px solid var(--line); border-radius: 0.55rem; font-size: 0.86rem; }
+  .check-row { display: flex; align-items: flex-start; gap: 0.7rem; margin-top: 0.85rem; padding: 0.75rem; border: 1px solid transparent; border-radius: 0.55rem; cursor: pointer; }
+  .check-row:hover { background: var(--surface-muted); border-color: var(--line); }
+  .check-row input { width: 1.05rem; height: 1.05rem; margin: 0.12rem 0 0; accent-color: var(--teal-700); }
+  .check-row strong, .check-row span { display: block; }
+  .check-row strong { color: var(--ink-800); font-size: 0.88rem; }
+  .check-row span { margin-top: 0.12rem; color: var(--ink-600); font-size: 0.81rem; }
+  .missing-note { margin: 0.65rem 0 0; color: var(--ink-600); font-size: 0.8rem; }
 
-      button:hover {
-        transform: translateY(-1px);
-      }
+  .letter-card textarea { min-height: 21rem; background: #fff; font-family: inherit; font-size: 0.98rem; }
+  .advisory { margin-bottom: 1rem; padding: 0.85rem 1rem; color: var(--ink-700); background: var(--amber-100); border-left: 4px solid var(--amber-700); border-radius: 0 0.55rem 0.55rem 0; font-size: 0.88rem; }
+  .advisory strong { color: var(--amber-700); }
+  .advisory ul { margin: 0.45rem 0 0; padding-left: 1.2rem; }
 
-      .btn-primary {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-        color: white;
-        box-shadow: 0 10px 22px rgba(37, 99, 235, 0.24);
-      }
+  @media (max-width: 900px) { .workspace-grid { grid-template-columns: 1fr; } .workspace-header { align-items: start; flex-direction: column; gap: 1rem; } }
+  @media (max-width: 560px) { .page-shell { width: min(100% - 1rem, 1180px); } .card__header, .card__body { padding: 1rem; } .role-summary { grid-template-columns: 1fr; } .metric { text-align: left; } .action-bar .button { width: 100%; } .workflow-nav { margin-inline: -0.1rem; } }
+</style>
+{% endblock %}
 
-      .btn-secondary {
-        background: #0f172a;
-        color: white;
-      }
+{% block content %}
+<section class="workspace-header" aria-labelledby="workspace-title">
+  <div>
+    <p class="eyebrow">Application workspace</p>
+    <h1 id="workspace-title">Build a role-specific application.</h1>
+    <p>Work through the evidence in order. Your profile stays the source of truth, and every draft remains yours to review.</p>
+  </div>
+  <span class="privacy-badge">Local workspace</span>
+</section>
 
-      .stack {
-        display: grid;
-        gap: 20px;
-      }
+<nav class="workflow-nav" aria-label="Application workflow">
+  <a href="#intake">1. Prepare</a>
+  <a href="#review">2. Review evidence</a>
+  <a href="#documents">3. Generate documents</a>
+</nav>
 
-      .grid {
-        display: grid;
-        grid-template-columns: minmax(320px, 1.1fr) minmax(380px, 1.6fr);
-        gap: 20px;
-      }
+{% if error %}
+  <div class="alert" role="alert">
+    <span class="alert__icon" aria-hidden="true">!</span>
+    <div><strong>We could not complete that step.</strong>{{ error }}</div>
+  </div>
+{% endif %}
 
-      .panel {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 22px;
-        box-shadow: var(--shadow);
-      }
+<form method="post" action="/dashboard" data-application-form>
+  {% if job_analysis_json and match_analysis_json %}
+    <input type="hidden" name="job_analysis_json" value="{{ job_analysis_json }}">
+    <input type="hidden" name="match_analysis_json" value="{{ match_analysis_json }}">
+  {% endif %}
 
-      .panel h2 {
-        margin-top: 0;
-        margin-bottom: 18px;
-        font-size: 1.2rem;
-      }
-
-      .field {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: var(--text);
-      }
-
-      textarea {
-        width: 100%;
-        min-height: 210px;
-        resize: vertical;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 14px 16px;
-        font: 0.94rem/1.5 "SFMono-Regular", Consolas, monospace;
-        background: rgba(248, 250, 252, 0.9);
-        color: var(--text);
-      }
-
-      textarea:focus {
-        outline: 3px solid rgba(37, 99, 235, 0.12);
-        border-color: rgba(37, 99, 235, 0.38);
-      }
-
-      .top-margins {
-        margin-top: 18px;
-      }
-
-      .document-actions {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-        gap: 12px;
-        margin-top: 18px;
-      }
-
-      .action-group {
-        min-width: 0;
-        padding: 14px;
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        background: rgba(248, 250, 252, 0.78);
-      }
-
-      .action-group h3 {
-        margin: 0 0 10px;
-        color: var(--muted);
-        font-size: 0.86rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-
-      .action-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .action-buttons button {
-        flex: 1 1 auto;
-        padding: 0.68rem 0.85rem;
-      }
-
-      .error {
-        background: #fff1f2;
-        border: 1px solid #fbcfe8;
-        color: var(--danger);
-        padding: 14px 16px;
-        border-radius: 12px;
-        font-weight: 600;
-      }
-
-      .meta {
-        color: var(--muted);
-        font-size: 0.95rem;
-      }
-
-      .summary-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 14px 0;
-      }
-
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        background: #ebf2ff;
-        color: #1e3a8a;
-        padding: 6px 10px;
-        border-radius: 999px;
-        font-size: 0.8rem;
-        font-weight: 700;
-      }
-
-      .match-list {
-        display: grid;
-        gap: 14px;
-        margin-top: 14px;
-      }
-
-      .match {
-        border: 1px solid var(--border);
-        border-left: 4px solid #93c5fd;
-        border-radius: 14px;
-        background: rgba(248, 250, 252, 0.8);
-        padding: 16px;
-      }
-
-      .match-header {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-
-      .match-title {
-        font-size: 1.02rem;
-        font-weight: 700;
-      }
-
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 5px 9px;
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        text-transform: uppercase;
-      }
-
-      .chip-verified { background: rgba(15, 118, 110, 0.12); color: var(--success); }
-      .chip-transferable { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
-      .chip-familiarity { background: rgba(180, 83, 9, 0.1); color: var(--warning); }
-      .chip-missing { background: rgba(185, 28, 28, 0.08); color: var(--danger); }
-      .chip-conflict { background: rgba(109, 40, 217, 0.12); color: #6d28d9; }
-
-      .evidence-list {
-        margin: 10px 0 0 18px;
-        padding: 0;
-        color: var(--muted);
-      }
-
-      .evidence-list li + li {
-        margin-top: 6px;
-      }
-
-      .suggestion {
-        margin-top: 12px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.7);
-        border: 1px solid rgba(148, 163, 184, 0.35);
-      }
-
-      .toggle-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 12px;
-        color: var(--text);
-        font-weight: 600;
-      }
-
-      .toggle-row input {
-        width: 16px;
-        height: 16px;
-      }
-
-      pre {
-        margin: 0;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        border-radius: 14px;
-        background: #f8fafc;
-        border: 1px solid var(--border);
-        padding: 18px;
-        font-size: 0.9rem;
-        line-height: 1.6;
-      }
-
-      @media (max-width: 900px) {
-        .grid { grid-template-columns: 1fr; }
-        .topbar { flex-direction: column; align-items: flex-start; }
-      }
-    </style>
-  </head>
-  <body>
-    <form method="post" action="/dashboard">
-      <div class="container stack">
-        {% if job_analysis_json and match_analysis_json %}
-          <input type="hidden" name="job_analysis_json" value="{{ job_analysis_json }}">
-          <input type="hidden" name="match_analysis_json" value="{{ match_analysis_json }}">
-        {% endif %}
-        <div class="topbar">
-          <div>
-            <h1>Job Application Assistant</h1>
-            <small>Evidence-led CV and job-match workflow</small>
-          </div>
-          <div class="actions">
-            <a href="/"><button class="btn-secondary" type="button">Home</button></a>
-            <a href="/health"><button class="btn-secondary" type="button">Health</button></a>
-          </div>
+  <div class="workspace-grid">
+    <section id="intake" class="card" aria-labelledby="intake-title">
+      <div class="card__header">
+        <div class="card__heading"><span class="step-number">1</span><div><h2 id="intake-title">Profile and role</h2><p>Add accurate profile data and the full job description.</p></div></div>
+      </div>
+      <div class="card__body">
+        <div class="field-group">
+          <label class="field-label" for="profile_json"><span>Candidate profile JSON</span><span class="field-help">Private local data</span></label>
+          <textarea id="profile_json" name="profile_json" aria-label="Profile JSON" spellcheck="false">{{ profile_json }}</textarea>
+          <div class="input-meta"><span>Use VERIFIED only for direct evidence.</span><span data-count-for="profile_json"></span></div>
         </div>
+        <div class="field-group">
+          <label class="field-label" for="job_text"><span>Job description</span><span class="field-help">Required for analysis</span></label>
+          <textarea id="job_text" name="job_text" placeholder="Paste the full job description here..." aria-label="Job description">{{ job_text }}</textarea>
+          <div class="input-meta"><span>Include responsibilities, requirements, and tools.</span><span data-count-for="job_text"></span></div>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="applicant_notes"><span>Your reason for applying</span><span class="field-help">Optional</span></label>
+          <textarea id="applicant_notes" name="applicant_notes" placeholder="What interests you about this team or role? Which project or experience should the letter focus on?" aria-label="Your reason for applying">{{ applicant_notes }}</textarea>
+        </div>
+        <div class="action-bar" aria-label="Analysis actions">
+          <button class="button button--primary" type="submit" name="action" value="analyze" data-submit-label="Analyzing role…">Analyze job</button>
+          {% if cv_latex %}
+            <button class="button button--secondary" type="submit" name="action" value="download_pdf" data-submit-label="Preparing PDF…">Download CV PDF</button>
+            <button class="button button--secondary" type="submit" name="action" value="download_tex" data-submit-label="Preparing LaTeX…">Download CV LaTeX</button>
+          {% endif %}
+        </div>
+      </div>
+    </section>
 
-        {% if error %}
-          <div class="error">{{ error }}</div>
-        {% endif %}
-
-        <div class="grid">
-          <div class="panel">
-            <h2>1. Profile and job intake</h2>
-
-            <label for="profile_json" class="field">Candidate profile JSON</label>
-            <textarea id="profile_json" name="profile_json" aria-label="Profile JSON">{{ profile_json }}</textarea>
-
-            <div class="top-margins">
-              <label for="job_text" class="field">Job description</label>
-              <textarea id="job_text" name="job_text" placeholder="Paste the full job description here..." aria-label="Job description">{{ job_text }}</textarea>
-            </div>
-
-            <div class="top-margins">
-              <label for="applicant_notes" class="field">Your reason for applying (optional)</label>
-              <textarea id="applicant_notes" name="applicant_notes" placeholder="In your own words: what interests you about this company or role? Is there a detail, project, or experience you want the letter to focus on? Leave blank if you prefer.">{{ applicant_notes }}</textarea>
-            </div>
-
-            <div class="document-actions">
-              <section class="action-group" aria-labelledby="cv-actions-title">
-                <h3 id="cv-actions-title">CV</h3>
-                <div class="action-buttons">
-                  <button class="btn-primary" type="submit" name="action" value="analyze">Analyze job</button>
-                  {% if cv_latex %}
-                    <button class="btn-secondary" type="submit" name="action" value="download_pdf">Download CV PDF</button>
-                    <button class="btn-secondary" type="submit" name="action" value="download_tex">Download CV LaTeX</button>
+    <section id="review" class="card" aria-labelledby="review-title">
+      <div class="card__header">
+        <div class="card__heading"><span class="step-number">2</span><div><h2 id="review-title">Evidence review</h2><p>Choose only the skills you want to emphasize for this role.</p></div></div>
+      </div>
+      <div class="card__body">
+        {% if job_analysis and match_analysis %}
+          <div class="role-summary">
+            <div><h3>{{ job_analysis.position or 'Position not detected' }}</h3><p>{{ job_analysis.company or 'Company not detected' }}{% if job_analysis.location %} · {{ job_analysis.location }}{% endif %}</p></div>
+            <div class="metric"><strong>{{ match_analysis.score }}%</strong><span>match coverage</span></div>
+          </div>
+          <div class="analysis-meta"><span class="tag tag--method">{{ match_analysis.analysis_method }}</span><span class="tag">Technical review only</span></div>
+          <p class="analysis-summary">{{ match_analysis.summary }}</p>
+          <div class="selection-summary" data-selection-summary><span><strong>0 skills selected</strong> for this CV</span><span>Review each claim</span></div>
+          {% if match_analysis.matches %}
+            <div class="match-list">
+              {% for item in match_analysis.matches %}
+                {% set value = item.match_type.value if item.match_type.value is defined else item.match_type %}
+                {% set css = 'verified' if value == 'VERIFIED' else 'transferable' if value == 'TRANSFERABLE' else 'familiarity' if value == 'FAMILIARITY' else 'missing' if value == 'MISSING' else 'conflict' if value == 'CONFLICT' else 'transferable' %}
+                <article class="match match--{{ css }}">
+                  <div class="match__header"><div><h3>{{ item.requirement }}</h3><span class="importance">{{ item.importance }} priority</span></div><span class="chip chip--{{ css }}">{{ value }}</span></div>
+                  {% if item.candidate_evidence %}<ul class="evidence">{% for evidence in item.candidate_evidence %}<li>{{ evidence }}</li>{% endfor %}</ul>{% endif %}
+                  {% if item.recommended_wording %}<div class="suggestion"><strong>Suggested wording:</strong> {{ item.recommended_wording }}</div>{% endif %}
+                  {% if value not in ['MISSING', 'CONFLICT'] %}
+                    <label class="check-row"><input type="checkbox" name="selected_requirements" value="{{ item.requirement }}" {% if item.requirement in selected_requirements %}checked{% endif %}><span><strong>Include evidence-backed skill in CV</strong><span>Use the evidence and wording above as a guide.</span></span></label>
+                  {% else %}
+                    <label class="check-row"><input type="checkbox" name="selected_requirements" value="{{ item.requirement }}" {% if item.requirement in selected_requirements %}checked{% endif %}><span><strong>Add skill to the CV</strong><span>This remains an explicit choice, not evidence validation.</span></span></label>
+                    <label class="check-row"><input type="checkbox" name="learning_requirements" value="{{ item.requirement }}" {% if item.requirement in selected_learning_requirements %}checked{% endif %}><span><strong>Save as a learning target</strong><span>Keep it as a learning target — not a CV claim.</span></span></label>
+                    <p class="missing-note">No supporting profile evidence was found for this requirement.</p>
                   {% endif %}
-                </div>
-              </section>
-              {% if cv_latex %}
-                <section class="action-group" aria-labelledby="letter-actions-title">
-                  <h3 id="letter-actions-title">Cover letter</h3>
-                  <div class="action-buttons">
-                    <button class="btn-primary" type="submit" name="action" value="generate_cover_letter">Generate cover letter</button>
-                    {% if cover_letter_text %}
-                      <button class="btn-secondary" type="submit" name="action" value="download_cover_letter_pdf">Download cover letter PDF</button>
-                      <button class="btn-secondary" type="submit" name="action" value="download_cover_letter_tex">Download cover letter LaTeX</button>
-                      <button class="btn-secondary" type="submit" name="action" value="download_cover_letter_txt">Download cover letter text</button>
-                    {% endif %}
-                  </div>
-                </section>
-              {% endif %}
+                </article>
+              {% endfor %}
             </div>
-          </div>
-
-          <div class="panel">
-            <h2>2. Technical skills and tools</h2>
-            <p class="meta">Only technical skills, tools, and engineering domains are listed for CV selection. General soft skills are intentionally excluded.</p>
-            {% if job_analysis and match_analysis %}
-              <div class="meta">
-                <strong>{{ job_analysis.position or 'Position not detected' }}</strong>
-                {% if job_analysis.company %} · {{ job_analysis.company }}{% endif %}
-              </div>
-
-              <div class="summary-row">
-                <span class="pill">Score: {{ match_analysis.score }}%</span>
-                <span class="pill">Method: {{ match_analysis.analysis_method }}</span>
-              </div>
-
-              <p class="meta">{{ match_analysis.summary }}</p>
-
-              {% if match_analysis.matches %}
-                <div class="match-list">
-                  {% for item in match_analysis.matches %}
-                    {% set value = item.match_type.value if item.match_type.value is defined else item.match_type %}
-                    {% set css = 'verified' if value == 'VERIFIED' else 'transferable' if value == 'TRANSFERABLE' else 'familiarity' if value == 'FAMILIARITY' else 'missing' if value == 'MISSING' else 'conflict' if value == 'CONFLICT' else 'transferable' %}
-                    <div class="match">
-                      <div class="match-header">
-                        <div class="match-title">{{ item.requirement }}</div>
-                        <span class="chip chip-{{ css }}">{{ value }}</span>
-                      </div>
-
-                      <div class="meta">{{ item.importance }}</div>
-
-                      {% if item.candidate_evidence %}
-                        <ul class="evidence-list">
-                          {% for evidence in item.candidate_evidence %}
-                            <li>{{ evidence }}</li>
-                          {% endfor %}
-                        </ul>
-                      {% endif %}
-
-                      {% if item.recommended_wording %}
-                        <div class="suggestion"><strong>Suggested wording:</strong><br>{{ item.recommended_wording }}</div>
-                      {% endif %}
-
-                      {% if value not in ['MISSING', 'CONFLICT'] %}
-                        <label class="toggle-row">
-                          <input type="checkbox" name="selected_requirements" value="{{ item.requirement }}" {% if item.requirement in selected_requirements %}checked{% endif %}>
-                          <span>Include evidence-backed skill in CV</span>
-                        </label>
-                      {% else %}
-                        <label class="toggle-row">
-                          <input type="checkbox" name="selected_requirements" value="{{ item.requirement }}" {% if item.requirement in selected_requirements %}checked{% endif %}>
-                          <span>Add skill to the CV</span>
-                        </label>
-                        <label class="toggle-row">
-                          <input type="checkbox" name="learning_requirements" value="{{ item.requirement }}" {% if item.requirement in selected_learning_requirements %}checked{% endif %}>
-                          <span>Save as a learning target — not a CV claim</span>
-                        </label>
-                        <p class="meta">No supporting profile evidence was found, so this requirement cannot be added as a CV skill yet.</p>
-                      {% endif %}
-                    </div>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            {% else %}
-              <p class="meta">Paste a job description and submit to see the evidence-based analysis.</p>
-            {% endif %}
-          </div>
-        </div>
-
-        {% if cover_letter_text %}
-          <div class="panel">
-            <h2>3. Cover letter for {{ job_analysis.company or 'Company not specified' }}</h2>
-            <p class="meta">Review and edit the draft before downloading. The LaTeX and PDF header will use the analyzed company and role.</p>
-            {% if cover_letter_style_notes %}
-              <div class="meta" role="status">
-                <strong>Optional editing suggestions — your draft is still available:</strong>
-                <ul>
-                  {% for note in cover_letter_style_notes %}<li>{{ note }}</li>{% endfor %}
-                </ul>
-              </div>
-            {% endif %}
-            <label for="cover_letter_text" class="field">Cover letter draft</label>
-            <textarea id="cover_letter_text" name="cover_letter_text" aria-label="Cover letter draft">{{ cover_letter_text }}</textarea>
-          </div>
+          {% endif %}
+        {% else %}
+          <div class="empty-state"><span class="empty-state__icon" aria-hidden="true">↗</span><h3>Evidence review starts here</h3><p>Add your profile and a complete job description, then select <strong>Analyze job</strong> to see a structured technical review.</p></div>
         {% endif %}
       </div>
-    </form>
-  </body>
-</html>
+    </section>
+  </div>
+
+  {% if cv_latex %}
+    <section id="documents" class="card" style="margin-top: 1.25rem;" aria-labelledby="documents-title">
+      <div class="card__header"><div class="card__heading"><span class="step-number">3</span><div><h2 id="documents-title">Documents</h2><p>Generate a draft, review it, then choose the export you need.</p></div></div></div>
+      <div class="card__body">
+        <div class="action-bar" style="margin-top: 0; padding-top: 0; border-top: 0;" aria-label="Cover letter actions">
+          <button class="button button--primary" type="submit" name="action" value="generate_cover_letter" data-submit-label="Generating draft…">Generate cover letter</button>
+          {% if cover_letter_text %}
+            <button class="button button--secondary" type="submit" name="action" value="download_cover_letter_pdf" data-submit-label="Preparing PDF…">Download cover letter PDF</button>
+            <button class="button button--secondary" type="submit" name="action" value="download_cover_letter_tex" data-submit-label="Preparing LaTeX…">Download cover letter LaTeX</button>
+            <button class="button button--secondary" type="submit" name="action" value="download_cover_letter_txt" data-submit-label="Preparing text…">Download cover letter text</button>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if cover_letter_text %}
+    <section class="card letter-card" style="margin-top: 1.25rem;" aria-labelledby="letter-title">
+      <div class="card__header"><div><h2 id="letter-title">Cover letter for {{ job_analysis.company or 'Company not specified' }}</h2><p>Review and edit this draft before downloading. Company and role details come from the analysis.</p></div></div>
+      <div class="card__body">
+        {% if cover_letter_style_notes %}<div class="advisory" role="status"><strong>Optional editing suggestions</strong><ul>{% for note in cover_letter_style_notes %}<li>{{ note }}</li>{% endfor %}</ul></div>{% endif %}
+        <label class="field-label" for="cover_letter_text"><span>Cover letter draft</span><span class="field-help">Editable before export</span></label>
+        <textarea id="cover_letter_text" name="cover_letter_text" aria-label="Cover letter draft">{{ cover_letter_text }}</textarea>
+      </div>
+    </section>
+  {% endif %}
+</form>
+
+<script>
+  (() => {
+    const form = document.querySelector('[data-application-form]');
+    if (!form) return;
+
+    const updateCount = (textarea) => {
+      const output = document.querySelector(`[data-count-for="${textarea.id}"]`);
+      if (output) output.textContent = `${textarea.value.trim().length.toLocaleString()} characters`;
+    };
+    document.querySelectorAll('textarea').forEach((textarea) => {
+      updateCount(textarea);
+      textarea.addEventListener('input', () => updateCount(textarea));
+    });
+
+    const updateSelectionSummary = () => {
+      const selected = form.querySelectorAll('input[name="selected_requirements"]:checked').length;
+      const target = document.querySelector('[data-selection-summary] strong');
+      if (target) target.textContent = `${selected} skill${selected === 1 ? '' : 's'} selected`;
+    };
+    form.querySelectorAll('input[name="selected_requirements"]').forEach((input) => input.addEventListener('change', updateSelectionSummary));
+    updateSelectionSummary();
+
+    form.addEventListener('submit', (event) => {
+      const button = event.submitter;
+      if (!button || !button.dataset.submitLabel) return;
+      button.dataset.originalLabel = button.textContent;
+      button.textContent = button.dataset.submitLabel;
+      button.setAttribute('aria-busy', 'true');
+    });
+  })();
+</script>
+{% endblock %}
