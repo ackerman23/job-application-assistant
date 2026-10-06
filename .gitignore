@@ -1,0 +1,17 @@
+.env
+__pycache__/
+*.py[cod]
+.venv/
+data/applications/*
+!data/applications/.gitkeep
+data/*.db
+data/candidate_profile.json
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.pdf
+resume.tex
+.streamlit/secrets.toml

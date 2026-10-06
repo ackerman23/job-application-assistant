@@ -1,0 +1,161 @@
+%-------------------------
+% Resume in Latex
+% Generated from the candidate profile using the current resume layout
+%-------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.375in}
+\addtolength{\evensidemargin}{-0.375in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+%-------------------------
+% Custom commands
+
+{% raw %}
+\newcommand{\resumeItem}[2]{
+  \item\small{
+    \textbf{#1}: #2 \vspace{-2pt}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-1pt}\item
+  \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+    \textbf{#1} & #2 \\
+    \textit{\small #3} & \textit{\small #4} \\
+  \end{tabular*}\vspace{-5pt}
+}
+
+\newcommand{\resumeSubItem}[2]{\resumeItem{#1}{#2}\vspace{-4pt}}
+
+\renewcommand{\labelitemii}{$\circ$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=*]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+{% endraw %}
+
+%-------------------------------------------
+%%%%%%  CV STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%----------HEADING-----------------
+
+\begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+\textbf{\Large {{ candidate.personal.name | latex_escape }}} & Email: \href{mailto:{{ candidate.personal.email | latex_escape }}}{{ '{' }}{{ candidate.personal.email | latex_escape }}{{ '}' }} \\
+{{ candidate.personal.location | latex_escape }} & Mobile: {{ candidate.personal.phone | latex_escape }} \\
+{% if candidate.personal.website %}\href{ {{ candidate.personal.website }}}{linkedin.com/in/{{ candidate.personal.website.rsplit('/', 1)[-1] | latex_escape }}/}{% endif %} & {% if candidate.personal.github %}\href{ {{ candidate.personal.github }}}{github.com/{{ candidate.personal.github.rsplit('/', 1)[-1] | latex_escape }}}{% endif %}
+\end{tabular*}
+
+%-----------EDUCATION-----------------
+
+\section{Education}
+
+\resumeSubHeadingListStart
+
+{% for item in candidate.education %}
+\resumeSubheading
+{ {{ item.institution | latex_escape }}}{ {{ item.location | latex_escape }}}
+{ {{ item.degree | latex_escape }}{% if item.field %} in {{ item.field | latex_escape }}{% endif %}}{ {{ item.start_date | latex_escape }} -- {{ item.end_date | latex_escape }}}
+
+{% if item.details %}
+\resumeItemListStart
+{% for detail in item.details %}\item {{ detail | latex_escape }}
+{% endfor %}\resumeItemListEnd
+{% endif %}
+{% endfor %}
+\resumeSubHeadingListEnd
+
+%-----------EXPERIENCE-----------------
+\section{Experience}
+
+\resumeSubHeadingListStart
+
+{% for item in candidate.experience if item.evidence_level.value == 'VERIFIED' %}
+\resumeSubheading
+{ {{ item.company | latex_escape }}}{ {{ item.location | latex_escape }}}
+{ {{ item.role | latex_escape }}}{ {{ item.start_date | latex_escape }} -- {{ item.end_date | latex_escape }}}
+
+\resumeItemListStart
+{% if item.summary %}\item {{ item.summary | latex_escape }}
+{% endif %}{% for achievement in item.achievements %}\item {{ achievement | latex_escape }}
+{% endfor %}{% for detail in item.responsibilities %}\item {{ detail | latex_escape }}
+{% endfor %}\resumeItemListEnd
+{% endfor %}
+\resumeSubHeadingListEnd
+
+%-----------PROJECTS-----------------
+
+\section{Projects}
+
+\resumeSubHeadingListStart
+
+{% for item in candidate.projects %}
+\resumeSubItem
+{ {{ item.name | latex_escape }}}
+{ {{ item.description | latex_escape }}{% for achievement in item.achievements %} {{ achievement | latex_escape }}{% endfor %}{% for detail in item.responsibilities %} {{ detail | latex_escape }}{% endfor %}{% if item.technologies %} Technologies: {{ item.technologies | join(', ') | latex_escape }}{% endif %}}
+
+{% endfor %}
+\resumeSubHeadingListEnd
+
+%-----------SKILLS-----------------
+
+\section{Skills}
+
+\resumeSubHeadingListStart
+
+{% for group in skill_groups %}{% if group.verified or group.familiarity or group.related %}
+\item{
+	extbf{ {{ group.name | latex_escape }}}: {% if group.verified %}{{ group.verified | join(', ') | latex_escape }}{% endif %}{% if group.familiarity %}{% if group.verified %}, {% endif %}\textit{Familiarity}: {{ group.familiarity | join(', ') | latex_escape }}{% endif %}{% if group.related %}{% if group.verified or group.familiarity %}, {% endif %}\textit{Related experience}: {{ group.related | join('; ') | latex_escape }}{% endif %}
+}
+
+{% endif %}{% endfor %}
+\resumeSubHeadingListEnd
+
+%-----------LANGUAGES-----------------
+
+\section{Languages}
+
+\resumeSubHeadingListStart
+
+{% for row in [candidate.personal.languages[:3], candidate.personal.languages[3:]] if row %}
+\item{
+{% for language in row %}{% set parts = language.split(' (') %}\textbf{ {{ parts[0] | latex_escape }}}{% if parts|length > 1 %}: {{ parts[1].rstrip(')') | latex_escape }}{% endif %}{% if not loop.last %} \hfill{% endif %}
+{% endfor %}}
+
+{% endfor %}
+\resumeSubHeadingListEnd
+
+\end{document}

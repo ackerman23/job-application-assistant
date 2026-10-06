@@ -1,0 +1,28 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{parskip}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.7em}
+\pagestyle{empty}
+
+\begin{document}
+\begin{center}
+  {\Large\bfseries {{ candidate.personal.name | latex_escape }}}\\[0.35em]
+  {% if candidate.personal.location %}{{ candidate.personal.location | latex_escape }}{% endif %}{% if candidate.personal.email %}{% if candidate.personal.location %} $\vert$ {% endif %}{{ candidate.personal.email | latex_escape }}{% endif %}{% if candidate.personal.phone %}{% if candidate.personal.location or candidate.personal.email %} $\vert$ {% endif %}{{ candidate.personal.phone | latex_escape }}{% endif %}
+
+  \vspace{0.8em}
+  {\LARGE\bfseries Cover Letter for {{ company | latex_escape }}}
+  {% if position %}\\[0.25em]{\large Re: {{ position | latex_escape }}}{% endif %}
+\end{center}
+\vspace{0.8em}
+\hrule
+\vspace{1.2em}
+
+{% for paragraph in paragraphs %}
+{{ paragraph | latex_escape }}
+
+{% endfor %}
+\end{document}
