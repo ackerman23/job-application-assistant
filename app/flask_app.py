@@ -11,6 +11,7 @@ from flask import Flask, jsonify, render_template, request, send_file
 
 from app.api.flask_routes import documents_bp, jobs_bp, profiles_bp
 from app.core.config import APPLICATIONS_DIR
+from app.core.settings import resolve_document_language
 from app.models.schemas import CandidateProfile, MatchType
 from app.services.application_services import (
     ApplicationWorkflowService,
@@ -166,6 +167,7 @@ def create_app() -> Flask:
             match_analysis_json=match_analysis_json,
             cover_letter_text=cover_letter_text,
             cover_letter_style_notes=cover_letter_style_notes,
+            document_language=resolve_document_language(job_analysis.job_language) if job_analysis else "English",
             applicant_notes=applicant_notes,
             error=error,
         )

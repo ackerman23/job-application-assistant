@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Callable
 
 from app.core.config import APPLICATIONS_DIR
+from app.core.settings import resolve_document_language
 from app.models.schemas import CandidateProfile, JobAnalysis, MatchAnalysis, MatchType
 from app.services.generation import (
     company_document_stem,
@@ -132,10 +133,13 @@ class DocumentExportService:
         txt_path = work_dir / f"{stem}.txt"
         tex_path = work_dir / f"{stem}.tex"
         txt_path.write_text(text, encoding="utf-8")
-        tex_path.write_text(
-            self._render_letter(text, profile, job.company, job.position),
-            encoding="utf-8",
+        language = resolve_document_language(job.job_language)
+        rendered_letter = (
+            self._render_letter(text, profile, job.company, job.position)
+            if language == "English"
+            else self._render_letter(text, profile, job.company, job.position, language)
         )
+        tex_path.write_text(rendered_letter, encoding="utf-8")
         if action == "download_cover_letter_txt":
             return txt_path, f"{stem}.txt"
         if action == "download_cover_letter_tex":

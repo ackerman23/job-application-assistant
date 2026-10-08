@@ -2,6 +2,9 @@
 # Copy to config/user-settings.yaml (the setup command does this automatically).
 # Never store API keys here; keep them in .env.
 
+# auto follows the detected language of the job description; use english/french to override.
+document_language: auto
+
 cv:
   # Default job-match categories added when no manual selection is supplied.
   default_selected_match_types:

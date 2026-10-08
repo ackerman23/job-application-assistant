@@ -5,6 +5,8 @@
 
 \documentclass[letterpaper,11pt]{article}
 
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
 \usepackage{latexsym}
 \usepackage[empty]{fullpage}
 \usepackage{titlesec}
@@ -74,21 +76,21 @@
 %----------HEADING-----------------
 
 \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
-\textbf{\Large {{ candidate.personal.name | latex_escape }}} & Email: \href{mailto:{{ candidate.personal.email | latex_escape }}}{{ '{' }}{{ candidate.personal.email | latex_escape }}{{ '}' }} \\
-{{ candidate.personal.location | latex_escape }} & Mobile: {{ candidate.personal.phone | latex_escape }} \\
+\csname textbf\endcsname{\Large {{ candidate.personal.name | latex_escape }}} & {{ 'Courriel' if language == 'French' else 'Email' }}: \href{mailto:{{ candidate.personal.email | latex_escape }}}{{ '{' }}{{ candidate.personal.email | latex_escape }}{{ '}' }} \\
+{{ candidate.personal.location | latex_escape }} & {{ 'Téléphone' if language == 'French' else 'Mobile' }}: {{ candidate.personal.phone | latex_escape }} \\
 {% if candidate.personal.website %}\href{ {{ candidate.personal.website }}}{linkedin.com/in/{{ candidate.personal.website.rsplit('/', 1)[-1] | latex_escape }}/}{% endif %} & {% if candidate.personal.github %}\href{ {{ candidate.personal.github }}}{github.com/{{ candidate.personal.github.rsplit('/', 1)[-1] | latex_escape }}}{% endif %}
 \end{tabular*}
 
 %-----------EDUCATION-----------------
 
-\section{Education}
+\section{ {{- 'Formation' if language == 'French' else 'Education' -}}}
 
 \resumeSubHeadingListStart
 
 {% for item in candidate.education %}
 \resumeSubheading
 { {{ item.institution | latex_escape }}}{ {{ item.location | latex_escape }}}
-{ {{ item.degree | latex_escape }}{% if item.field %} in {{ item.field | latex_escape }}{% endif %}}{ {{ item.start_date | latex_escape }} -- {{ item.end_date | latex_escape }}}
+{ {{ item.degree | latex_escape }}{% if item.field %} {{ 'en' if language == 'French' else 'in' }} {{ item.field | latex_escape }}{% endif %}}{ {{ item.start_date | latex_escape }} -- {{ item.end_date | latex_escape }}}
 
 {% if item.details %}
 \resumeItemListStart
@@ -99,7 +101,7 @@
 \resumeSubHeadingListEnd
 
 %-----------EXPERIENCE-----------------
-\section{Experience}
+\section{ {{- 'Expérience' if language == 'French' else 'Experience' -}}}
 
 \resumeSubHeadingListStart
 
@@ -118,7 +120,7 @@
 
 %-----------PROJECTS-----------------
 
-\section{Projects}
+\section{ {{- 'Projets' if language == 'French' else 'Projects' -}}}
 
 \resumeSubHeadingListStart
 
@@ -132,13 +134,13 @@
 
 %-----------SKILLS-----------------
 
-\section{Skills}
+\section{ {{- 'Compétences' if language == 'French' else 'Skills' -}}}
 
 \resumeSubHeadingListStart
 
 {% for group in skill_groups %}{% if group.verified or group.familiarity or group.related %}
 \item{
-  \csname textbf\endcsname{ {{ group.name | latex_escape }}}: {% if group.verified %}{{ group.verified | join(', ') | latex_escape }}{% endif %}{% if group.familiarity %}{% if group.verified %}, {% endif %}\textit{Familiarity}: {{ group.familiarity | join(', ') | latex_escape }}{% endif %}{% if group.related %}{% if group.verified or group.familiarity %}, {% endif %}\textit{Related experience}: {{ group.related | join('; ') | latex_escape }}{% endif %}
+  \csname textbf\endcsname{ {{ group.name | latex_escape }}}: {% if group.verified %}{{ group.verified | join(', ') | latex_escape }}{% endif %}{% if group.familiarity %}{% if group.verified %}, {% endif %}\textit{ {{ 'Notions' if language == 'French' else 'Familiarity' }}}: {{ group.familiarity | join(', ') | latex_escape }}{% endif %}{% if group.related %}{% if group.verified or group.familiarity %}, {% endif %}\textit{ {{ 'Expérience transférable' if language == 'French' else 'Related experience' }}}: {{ group.related | join('; ') | latex_escape }}{% endif %}
 }
 
 {% endif %}{% endfor %}
@@ -146,7 +148,7 @@
 
 %-----------LANGUAGES-----------------
 
-\section{Languages}
+\section{ {{- 'Langues' if language == 'French' else 'Languages' -}}}
 
 \resumeSubHeadingListStart
 

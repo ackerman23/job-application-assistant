@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -67,6 +68,7 @@ class CoverLetterSettings(BaseModel):
 class UserSettings(BaseModel):
     """All supported user-editable settings."""
 
+    document_language: Literal["auto", "english", "french"] = "auto"
     cv: CVSettings = Field(default_factory=CVSettings)
     cover_letter: CoverLetterSettings = Field(default_factory=CoverLetterSettings)
 
@@ -96,3 +98,11 @@ def get_user_settings() -> UserSettings:
         return UserSettings.model_validate(raw)
     except ValidationError as exc:
         raise _settings_error(str(exc)) from exc
+
+
+def resolve_document_language(job_language: str) -> str:
+    """Resolve the output language preference against the analyzed job language."""
+    preference = get_user_settings().document_language
+    if preference == "auto":
+        return "French" if job_language == "French" else "English"
+    return "French" if preference == "french" else "English"

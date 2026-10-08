@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 from pydantic import BaseModel, Field
 
 
@@ -87,6 +88,7 @@ class CandidateProfile(BaseModel):
 class JobAnalysis(BaseModel):
     analysis_method: str = "local"
     analysis_warning: str = ""
+    job_language: Literal["English", "French"] = "English"
     company: str = ""
     department: str = ""
     position: str = ""

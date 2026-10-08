@@ -14,8 +14,8 @@
   {% if candidate.personal.location %}{{ candidate.personal.location | latex_escape }}{% endif %}{% if candidate.personal.email %}{% if candidate.personal.location %} $\vert$ {% endif %}{{ candidate.personal.email | latex_escape }}{% endif %}{% if candidate.personal.phone %}{% if candidate.personal.location or candidate.personal.email %} $\vert$ {% endif %}{{ candidate.personal.phone | latex_escape }}{% endif %}
 
   \vspace{0.8em}
-  {\LARGE\bfseries Cover Letter for {{ company | latex_escape }}}
-  {% if position %}\\[0.25em]{\large Re: {{ position | latex_escape }}}{% endif %}
+  {\LARGE\bfseries {{ 'Lettre de motivation' if language == 'French' else 'Cover Letter' }}{% if company and company != 'Company not specified' %} {{ 'pour' if language == 'French' else 'for' }} {{ company | latex_escape }}{% endif %}}
+  {% if position %}\\[0.25em]{\large {{ 'Objet :' if language == 'French' else 'Re:' }} {{ position | latex_escape }}}{% endif %}
 \end{center}
 \vspace{0.8em}
 \hrule

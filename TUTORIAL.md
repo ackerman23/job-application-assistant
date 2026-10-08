@@ -81,7 +81,7 @@ Keep `.env` private. The dashboard can open without a key, but **Analyze job** a
 
 ## 4. Personal YAML preferences
 
-`config/user-settings.yaml` is a private settings file. It controls CV selection defaults, the number of CV entries, cover-letter tone, technical detail, target length, focus skills, hiring-manager review, and optional writing instructions.
+`config/user-settings.yaml` is a private settings file. It controls document language (`auto`, `english`, or `french`), CV selection defaults, the number of CV entries, cover-letter tone, technical detail, target length, focus skills, hiring-manager review, and optional writing instructions. With `auto`, the language detected from the job description is used for both documents.
 
 Read the comments in [config/user-settings.example.yaml](config/user-settings.example.yaml) before editing it. Do not put an API key or private profile content in the YAML file. Preferences guide the writer but cannot override the requirement to avoid invented claims.
 
@@ -151,4 +151,4 @@ The helper disables unrelated system-wide pytest plugins automatically.
 
 ## Data and privacy
 
-Profile data and generated files are stored locally. When AI features are used, the job description and relevant candidate evidence are sent to the configured OpenAI API. `data/candidate_profile.json`, `data/applications/`, `.env`, and `config/user-settings.yaml` are ignored by Git; keep personal application materials out of commits.
+Profile data and generated files are stored locally. When AI features are used, relevant job and candidate text is sent to the configured OpenAI API; French CV translation sends the tailored CV's descriptive text for translation. Translation results are cached in memory only while the process runs. `data/candidate_profile.json`, `data/applications/`, `.env`, and `config/user-settings.yaml` are ignored by Git; keep personal application materials out of commits.

@@ -2,6 +2,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from fastapi import APIRouter, BackgroundTasks, HTTPException
+from app.core.settings import resolve_document_language
 from fastapi.responses import FileResponse
 from pydantic import Field
 from app.models.schemas import CandidateProfile, CompanyResearch, JobAnalysis, MatchAnalysis
@@ -60,7 +61,12 @@ def cover_letter(data: DocumentInput):
 def cover_letter_latex(data: DocumentInput):
     try:
         text = _generate_letter(data)
-        latex = generate_letter_tex(text, data.profile, data.job.company, data.job.position)
+        language = resolve_document_language(data.job.job_language)
+        latex = (
+            generate_letter_tex(text, data.profile, data.job.company, data.job.position)
+            if language == "English"
+            else generate_letter_tex(text, data.profile, data.job.company, data.job.position, language)
+        )
         return {
             "text": text,
             "latex": latex,
@@ -78,10 +84,13 @@ def cover_letter_pdf(data: DocumentInput, background_tasks: BackgroundTasks):
     tex_path = work_dir / "cover_letter.tex"
     try:
         text = _generate_letter(data)
-        tex_path.write_text(
-            generate_letter_tex(text, data.profile, data.job.company, data.job.position),
-            encoding="utf-8",
+        language = resolve_document_language(data.job.job_language)
+        rendered_letter = (
+            generate_letter_tex(text, data.profile, data.job.company, data.job.position)
+            if language == "English"
+            else generate_letter_tex(text, data.profile, data.job.company, data.job.position, language)
         )
+        tex_path.write_text(rendered_letter, encoding="utf-8")
         pdf_path = compile_pdf(tex_path)
     except (RuntimeError, ValueError) as exc:
         shutil.rmtree(work_dir, ignore_errors=True)

@@ -1,6 +1,7 @@
 """Document routes for the Flask app."""
 
 from flask import Blueprint, jsonify, request
+from app.core.settings import resolve_document_language
 from app.models.schemas import CandidateProfile, JobAnalysis, MatchAnalysis
 from app.services.application_services import CoverLetterService, ApplicationWorkflowService
 from app.services.generation import generate_letter_tex
@@ -33,7 +34,13 @@ def generate_letter():
     )
     return jsonify({
         "text": text,
-        "latex": generate_letter_tex(text, profile, job.company, job.position),
+        "latex": (
+            generate_letter_tex(text, profile, job.company, job.position)
+            if resolve_document_language(job.job_language) == "English"
+            else generate_letter_tex(
+                text, profile, job.company, job.position, resolve_document_language(job.job_language)
+            )
+        ),
         "company": job.company,
         "position": job.position,
         "style_suggestions": style_suggestions,

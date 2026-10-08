@@ -36,11 +36,11 @@ On first launch, an empty `data/candidate_profile.json` is created. Edit the pro
 {"name":"SysML","status":"FAMILIARITY","evidence":["Completed introductory coursework"]}
 ```
 
-Profile data and generated documents are stored locally as JSON and files; no database is required. When AI-assisted analysis or cover-letter generation is used, job text and relevant candidate profile evidence are sent to the configured OpenAI API. `data/applications/` and `.env` are ignored by Git. Do not commit private application materials.
+Profile data and generated documents are stored locally as JSON and files; no database is required. When AI-assisted analysis, cover-letter generation, or French CV translation is used, relevant job and candidate document text is sent to the configured OpenAI API. French CV translations are cached in memory for the running process only. `data/applications/` and `.env` are ignored by Git. Do not commit private application materials.
 
 ## Personal settings
 
-The setup command creates a private [user settings template](config/user-settings.example.yaml) at `config/user-settings.yaml`. Use it to control CV selection defaults, the number of experience/project entries, cover-letter tone, technical detail, target length, priority skills, and extra writing instructions. This private file is ignored by Git.
+The setup command creates a private [user settings template](config/user-settings.example.yaml) at `config/user-settings.yaml`. Use it to control document language (`auto`, `english`, or `french`), CV selection defaults, the number of experience/project entries, cover-letter tone, technical detail, target length, priority skills, and extra writing instructions. In `auto` mode, French job descriptions produce a French CV and cover letter. This private file is ignored by Git.
 
 Settings guide the generated documents but do not replace the core evidence rules: unsupported experience, credentials, metrics, and skills must not be presented as verified facts.
 
@@ -52,6 +52,41 @@ Settings guide the generated documents but do not replace the core evidence rule
 - A CV is rendered from profile evidence. Selected requirements determine skill placement and prioritize relevant experience; unsupported requirements can be added explicitly as skills when the user chooses them. Existing experience wording is preserved while relevant bullets are prioritized.
 - Generated reports and downloads are stored as local files under `data/applications/`.
 - The API is available at `/docs` when running FastAPI.
+
+## Agentic application workflow
+
+The assistant uses a **bounded, human-in-the-loop AI workflow** rather than an unrestricted autonomous agent. Each stage has a specific input and output; the model cannot silently change the candidate profile or submit an application. The user reviews the analysis, chooses which requirements to emphasize, edits the cover letter, and decides what to export.
+
+```mermaid
+flowchart LR
+	Profile[Candidate profile] --> Match[Evidence matching]
+	JD[Job description] --> Analyze[AI job analysis]
+	Analyze --> Match
+	Match --> Review[User reviews evidence and selects skills]
+	Profile --> CV[CV generation]
+	Review --> CV
+	Analyze --> LetterContext[Structured role and hiring-need context]
+	Match --> LetterContext
+	Profile --> LetterContext
+	Notes[Applicant notes and optional verified research] --> LetterContext
+	LetterContext --> Draft[AI cover-letter draft]
+	Draft --> Quality[Advisory quality review]
+	Quality --> Edit[Optional AI revision]
+	Edit --> UserReview[User edits and approves exports]
+	CV --> UserReview
+```
+
+### What the stages do
+
+1. **Analyze the role:** AI extracts role details, responsibilities, requirements, and likely activities from the supplied job description. It also identifies its predominant language for document-language selection.
+2. **Match evidence:** requirements are compared with the profile's skills, experience, and projects. When configured AI matching fails, a deterministic local matcher is used and the analysis is labeled as a fallback.
+3. **Prepare a writing brief:** a structured engine organizes the hiring need, job context, supported evidence, role intersections, learning gaps, candidate narrative, and writing preferences. This is preparation logic, not a separate autonomous AI agent. Company facts are not invented; external research is used only when supplied as verified.
+4. **Generate documents:** the CV is rendered from reviewed profile data and selections. The cover-letter model uses the structured brief and evidence rules. If the configured quality review indicates revision is needed, an optional editor pass may revise the draft. French CV translation is a separate AI translation step when French output is selected.
+5. **Keep the user in control:** review the match labels and selected skills, check the generated CV and letter, and make any edits before downloading. Quality and factuality checks are advisory, not guarantees.
+
+### Available tool/API layer
+
+The FastAPI service exposes typed endpoints under `/docs`, and its MCP registry includes profile retrieval, job analysis, CV generation, and cover-letter generation/export tools. These are callable workflow operations—not an autonomous planner or an agent that independently chains tools, researches the web, or applies for jobs. Flask, FastAPI, and MCP share the same core workflow and evidence rules.
 
 ## Documentation
 

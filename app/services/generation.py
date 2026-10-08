@@ -1,9 +1,10 @@
 import json
 import re
+from functools import lru_cache
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from app.core.config import EDITOR_MODEL, OPENAI_API_KEY, OPENAI_MODEL, ROOT, WRITING_MODEL
-from app.core.settings import get_user_settings
+from app.core.settings import get_user_settings, resolve_document_language
 from app.models.schemas import CandidateProfile, CompanyResearch, JobAnalysis, MatchAnalysis, MatchType
 from app.services.cover_letter_engine import CoverLetterIntelligenceEngine
 
@@ -150,8 +151,12 @@ def generate_cover_letter(
 ) -> str:
     context = _approved_context(profile, job, match, applicant_notes, company_research, writing_samples)
     settings = get_user_settings().cover_letter
+    language = resolve_document_language(job.job_language)
     system_prompt = (PROMPTS / "cover_letter.txt").read_text(encoding="utf-8")
     system_prompt += (
+        f"\n\nOUTPUT LANGUAGE\nWrite the complete cover letter in {language}. "
+        "Translate the candidate's supplied facts and applicant notes naturally, but preserve names, company names, role titles, product names, and technical terms where appropriate. "
+        "Do not change the underlying facts.\n"
         "\n\nUSER PREFERENCES\n"
         "Apply these preferences when they do not conflict with the evidence, honesty, and factuality rules above. "
         f"Tone: {settings.tone}. Technical detail: {settings.technical_detail}. "
@@ -220,6 +225,110 @@ def validate_cover_letter_style(text: str) -> list[str]:
     if any(starts_with_i[index:index + 3] == [True, True, True] for index in range(max(0, len(starts_with_i) - 2))):
         issues.append("Vary sentence openings; avoid three consecutive sentences beginning with ‘I’.")
     return issues
+
+
+def _cv_translation_items(profile_data: dict) -> list[dict[str, str]]:
+    """Collect only CV prose; identifiers, names, skills, and credentials stay unchanged."""
+    items: list[dict[str, str]] = []
+
+    def add(path: str, value: str) -> None:
+        if value.strip():
+            items.append({"id": path, "text": value})
+
+    for index, education in enumerate(profile_data["education"]):
+        add(f"education.{index}.degree", education["degree"])
+        add(f"education.{index}.field", education["field"])
+        for detail_index, text in enumerate(education["details"]):
+            add(f"education.{index}.details.{detail_index}", text)
+    for index, experience in enumerate(profile_data["experience"]):
+        add(f"experience.{index}.role", experience["role"])
+        add(f"experience.{index}.summary", experience["summary"])
+        for field in ("responsibilities", "achievements"):
+            for text_index, text in enumerate(experience[field]):
+                add(f"experience.{index}.{field}.{text_index}", text)
+    for index, project in enumerate(profile_data["projects"]):
+        add(f"projects.{index}.description", project["description"])
+        for field in ("responsibilities", "achievements"):
+            for text_index, text in enumerate(project[field]):
+                add(f"projects.{index}.{field}.{text_index}", text)
+    for field in ("achievements", "interests"):
+        for text_index, text in enumerate(profile_data[field]):
+            add(f"{field}.{text_index}", text)
+    add("career_direction", profile_data["career_direction"])
+    return items
+
+
+@lru_cache(maxsize=32)
+def _translate_cv_items(items_json: str) -> str:
+    """Translate CV prose to French and cache the result for repeated form posts."""
+    from openai import APIConnectionError, AuthenticationError, RateLimitError
+
+    client = _client()
+    try:
+        response = client.chat.completions.create(
+            model=WRITING_MODEL,
+            temperature=0,
+            response_format={"type": "json_object"},
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Translate each supplied CV text into natural, professional French. "
+                        "Return a JSON object with a translations array; for every input item return exactly its id and translated text. "
+                        "Preserve meaning, evidence level, tense, dates, quantities, and all factual limits. "
+                        "Do not add claims. Keep technical product names and acronyms unchanged when commonly used in English."
+                    ),
+                },
+                {"role": "user", "content": items_json},
+            ],
+        )
+    except AuthenticationError as exc:
+        raise RuntimeError("OpenAI rejected the API key while translating the CV. Check the configured key and retry.") from exc
+    except RateLimitError as exc:
+        raise RuntimeError("OpenAI rate or usage limits prevented CV translation. Check the project's API limits and retry.") from exc
+    except APIConnectionError as exc:
+        raise RuntimeError("Could not connect to OpenAI to translate the CV. Check the internet connection and retry.") from exc
+    content = response.choices[0].message.content or ""
+    try:
+        parsed = json.loads(content)
+        translations = parsed["translations"]
+        if not isinstance(translations, list):
+            raise ValueError("translations must be a list")
+        return json.dumps(translations, ensure_ascii=False)
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        raise RuntimeError("The AI returned an invalid CV translation. No translated CV was generated; please retry.") from exc
+
+
+def _translate_cv_profile_to_french(profile: CandidateProfile) -> CandidateProfile:
+    """Translate only descriptive CV fields, retaining names, skills, and source facts."""
+    profile_data = profile.model_dump(mode="json")
+    items = _cv_translation_items(profile_data)
+    if not items:
+        return profile
+    translated_items = json.loads(_translate_cv_items(json.dumps(items, ensure_ascii=False)))
+    expected = {item["id"] for item in items}
+    if (
+        not isinstance(translated_items, list)
+        or {item.get("id") for item in translated_items if isinstance(item, dict)} != expected
+        or len(translated_items) != len(expected)
+        or any(not isinstance(item.get("text"), str) for item in translated_items if isinstance(item, dict))
+    ):
+        raise RuntimeError("The AI returned incomplete CV translations. No translated CV was generated; please retry.")
+
+    def set_path(path: str, value: str) -> None:
+        parts = path.split(".")
+        target = profile_data
+        for part in parts[:-1]:
+            target = target[int(part)] if isinstance(target, list) else target[part]
+        key = parts[-1]
+        if isinstance(target, list):
+            target[int(key)] = value
+        else:
+            target[key] = value
+
+    for item in translated_items:
+        set_path(item["id"], item["text"])
+    return CandidateProfile.model_validate(profile_data)
 
 
 def generate_cv_tex(profile: CandidateProfile, job: JobAnalysis, match: MatchAnalysis, selected_requirements: list[str] | None = None) -> str:
@@ -310,7 +419,19 @@ def generate_cv_tex(profile: CandidateProfile, job: JobAnalysis, match: MatchAna
         "projects": sorted(profile.projects, key=rank, reverse=True)[:settings.max_project_entries],
         "skills": cv_skills,
     })
-    return env.get_template("default_cv.tex.j2").render(candidate=tailored, job=job, match=match, skill_groups=skill_groups)
+    language = resolve_document_language(job.job_language)
+    if language == "French":
+        tailored = _translate_cv_profile_to_french(tailored)
+        translated_group_names = {
+            "Programming & Data": "Programmation et données",
+            "Space & Systems Engineering": "Ingénierie spatiale et systèmes",
+            "Software, AI & Engineering": "Logiciels, IA et ingénierie",
+        }
+        for group in skill_groups:
+            group["name"] = translated_group_names[group["name"]]
+    return env.get_template("default_cv.tex.j2").render(
+        candidate=tailored, job=job, match=match, skill_groups=skill_groups, language=language
+    )
 
 
 def generate_change_log(match: MatchAnalysis) -> str:
@@ -380,6 +501,7 @@ def generate_letter_tex(
     candidate: CandidateProfile,
     company: str = "",
     position: str = "",
+    language: str = "English",
 ) -> str:
     """Render a cover letter into the company-headed LaTeX template."""
     env = Environment(loader=FileSystemLoader(ROOT / "templates" / "cover_letter"))
@@ -400,6 +522,7 @@ def generate_letter_tex(
         company=company.strip() or "Company not specified",
         position=position.strip(),
         paragraphs=paragraphs,
+        language=language,
     )
 
 

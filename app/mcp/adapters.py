@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 from app.core.config import APPLICATIONS_DIR
+from app.core.settings import resolve_document_language
 from app.services.generation import company_document_stem, compile_pdf, generate_letter_tex, validate_cover_letter_style
 from app.services.workflow import analyze_profile_for_job, generate_cover_letter_document, generate_cv_document
 
@@ -40,7 +41,12 @@ def adapt_cover_letter_service(profile, job, match, applicant_notes="", company_
         letter = generate_cover_letter_document(profile, job, match, applicant_notes)
     else:
         letter = generate_cover_letter_document(profile, job, match, applicant_notes, company_research, writing_samples)
-    latex = generate_letter_tex(letter, profile, job.company, job.position)
+    language = resolve_document_language(job.job_language)
+    latex = (
+        generate_letter_tex(letter, profile, job.company, job.position)
+        if language == "English"
+        else generate_letter_tex(letter, profile, job.company, job.position, language)
+    )
     return {
         "text": letter,
         "latex": latex,

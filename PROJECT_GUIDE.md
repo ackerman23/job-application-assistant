@@ -139,6 +139,7 @@ PDF downloads additionally require `latexmk` or `pdflatex`. LaTeX source can sti
 
 `config/user-settings.yaml` controls non-secret personal preferences:
 
+- Document language: automatic job-description detection, or an English/French override.
 - Default job-match categories selected for a CV.
 - Whether explicitly selected missing requirements appear as CV skills.
 - Maximum experience and project entries in a generated CV.

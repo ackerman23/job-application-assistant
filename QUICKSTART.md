@@ -24,7 +24,7 @@ python scripts/setup.py run
 
 The helper also supports `python scripts/setup.py test` and `python scripts/setup.py clean`.
 
-It also creates a private `config/user-settings.yaml`. Use this YAML file to control CV selection defaults, document length, cover-letter tone, technical emphasis, focus skills, and optional writing instructions. API keys stay in `.env`, not the YAML file.
+It also creates a private `config/user-settings.yaml`. Use this YAML file to control document language (`auto`, `english`, or `french`), CV selection defaults, document length, cover-letter tone, technical emphasis, focus skills, and optional writing instructions. In `auto` mode, French job descriptions produce French documents. API keys stay in `.env`, not the YAML file.
 
 To start from the fictional base CV instead of an empty profile:
 

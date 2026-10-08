@@ -14,7 +14,11 @@
   .workflow-nav a { flex: 1 0 max-content; padding: 0.65rem 0.8rem; color: var(--ink-600); border-radius: 0.55rem; font-size: 0.86rem; font-weight: 750; text-align: center; text-decoration: none; }
   .workflow-nav a:hover, .workflow-nav a:focus-visible { color: var(--ink-950); background: #fff; }
 
-  .workspace-grid { display: grid; grid-template-columns: minmax(19rem, 0.9fr) minmax(0, 1.25fr); gap: 1.25rem; align-items: start; }
+  .workspace-grid { display: grid; grid-template-columns: minmax(19rem, 0.9fr) minmax(0, 1.25fr); grid-template-areas: "intake review" "documents review" "letter review"; gap: 1.25rem; align-items: start; }
+  #intake { grid-area: intake; }
+  #review { grid-area: review; }
+  #documents { grid-area: documents; }
+  .letter-card { grid-area: letter; }
   .stack { display: grid; gap: 1.25rem; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
   .card__header { display: flex; justify-content: space-between; gap: 1rem; padding: 1.35rem 1.35rem 1rem; border-bottom: 1px solid var(--line); }
@@ -61,7 +65,7 @@
 
   .selection-summary { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0 0 0.9rem; padding: 0.75rem 0.85rem; color: var(--ink-700); background: var(--teal-100); border-radius: 0.65rem; font-size: 0.86rem; }
   .selection-summary strong { color: var(--teal-800); }
-  .match-list { display: grid; gap: 0.75rem; }
+  .match-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 0.75rem; align-items: start; }
   .match { position: relative; padding: 1rem; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-md); }
   .match::before { position: absolute; top: 0; bottom: 0; left: 0; width: 4px; content: ""; background: var(--ink-400); }
   .match--verified::before { background: var(--teal-700); }
@@ -94,7 +98,7 @@
   .advisory strong { color: var(--amber-700); }
   .advisory ul { margin: 0.45rem 0 0; padding-left: 1.2rem; }
 
-  @media (max-width: 900px) { .workspace-grid { grid-template-columns: 1fr; } .workspace-header { align-items: start; flex-direction: column; gap: 1rem; } }
+  @media (max-width: 900px) { .workspace-grid { grid-template-columns: 1fr; grid-template-areas: "intake" "review" "documents" "letter"; } .workspace-header { align-items: start; flex-direction: column; gap: 1rem; } }
   @media (max-width: 560px) { .page-shell { width: min(100% - 1rem, 1180px); } .card__header, .card__body { padding: 1rem; } .role-summary { grid-template-columns: 1fr; } .metric { text-align: left; } .action-bar .button { width: 100%; } .workflow-nav { margin-inline: -0.1rem; } }
 </style>
 {% endblock %}
@@ -196,10 +200,8 @@
         {% endif %}
       </div>
     </section>
-  </div>
-
   {% if cv_latex %}
-    <section id="documents" class="card" style="margin-top: 1.25rem;" aria-labelledby="documents-title">
+    <section id="documents" class="card" aria-labelledby="documents-title">
       <div class="card__header"><div class="card__heading"><span class="step-number">3</span><div><h2 id="documents-title">Documents</h2><p>Generate a draft, review it, then choose the export you need.</p></div></div></div>
       <div class="card__body">
         <div class="action-bar" style="margin-top: 0; padding-top: 0; border-top: 0;" aria-label="Cover letter actions">
@@ -215,8 +217,8 @@
   {% endif %}
 
   {% if cover_letter_text %}
-    <section class="card letter-card" style="margin-top: 1.25rem;" aria-labelledby="letter-title">
-      <div class="card__header"><div><h2 id="letter-title">Cover letter for {{ job_analysis.company or 'Company not specified' }}</h2><p>Review and edit this draft before downloading. Company and role details come from the analysis.</p></div></div>
+    <section class="card letter-card" aria-labelledby="letter-title">
+      <div class="card__header"><div><h2 id="letter-title">{{ 'Lettre de motivation' if document_language == 'French' else 'Cover letter' }}{% if job_analysis.company %} {{ 'pour' if document_language == 'French' else 'for' }} {{ job_analysis.company }}{% endif %}</h2><p>Review and edit this draft before downloading. Company and role details come from the analysis.</p></div></div>
       <div class="card__body">
         {% if cover_letter_style_notes %}<div class="advisory" role="status"><strong>Optional editing suggestions</strong><ul>{% for note in cover_letter_style_notes %}<li>{{ note }}</li>{% endfor %}</ul></div>{% endif %}
         <label class="field-label" for="cover_letter_text"><span>Cover letter draft</span><span class="field-help">Editable before export</span></label>
@@ -224,6 +226,7 @@
       </div>
     </section>
   {% endif %}
+  </div>
 </form>
 
 <script>
