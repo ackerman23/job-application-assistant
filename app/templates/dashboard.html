@@ -145,12 +145,16 @@
         </div>
         <div class="field-group">
           <label class="field-label" for="job_text"><span>Job description</span><span class="field-help">Required for analysis</span></label>
-          <textarea id="job_text" name="job_text" placeholder="Paste the full job description here..." aria-label="Job description">{{ job_text }}</textarea>
+          <textarea id="job_text" name="job_text" required placeholder="Paste the full job description here..." aria-label="Job description">{{ job_text }}</textarea>
           <div class="input-meta"><span>Include responsibilities, requirements, and tools.</span><span data-count-for="job_text"></span></div>
         </div>
         <div class="field-group">
           <label class="field-label" for="applicant_notes"><span>Your reason for applying</span><span class="field-help">Optional</span></label>
           <textarea id="applicant_notes" name="applicant_notes" placeholder="What interests you about this team or role? Which project or experience should the letter focus on?" aria-label="Your reason for applying">{{ applicant_notes }}</textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="company_url"><span>Company website</span><span class="field-help">Optional</span></label>
+          <input id="company_url" name="company_url" type="text" inputmode="url" value="{{ company_url }}" placeholder="example.com — quoted facts from the company's own pages are used in the letter" aria-label="Company website" style="width:100%;padding:0.7rem 0.85rem;border:1px solid var(--line);border-radius:0.6rem;font:inherit">
         </div>
         <div class="action-bar" aria-label="Analysis actions">
           <button class="button button--primary" type="submit" name="action" value="analyze" data-submit-label="Analyzing role…">Analyze job</button>

@@ -6,7 +6,10 @@ config/user-settings.yaml
 data/applications/*
 !data/applications/.gitkeep
 data/*.db
+data/writing_samples.json
+data/research_cache.json
 data/candidate_profile.json
+data/candidate_profile_import.json
 *.aux
 *.fdb_latexmk
 *.fls

@@ -3,6 +3,7 @@ Flask>=3.0,<4
 uvicorn[standard]>=0.30,<1
 gunicorn>=22.0,<24
 openai>=1.40,<3
+httpx>=0.27,<1
 pydantic>=2.8,<3
 Jinja2>=3.1,<4
 python-dotenv>=1.0,<2
