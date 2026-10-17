@@ -200,6 +200,11 @@ class VoiceProfile(BaseModel):
     enthusiasm: str = "moderate"
     sentence_length: str = "medium"
     vocabulary: str = "technical but accessible"
+    average_sentence_words: float = 0.0
+    uses_contractions: bool = False
+    sample_count: int = 0
+    typical_openers: list[str] = Field(default_factory=list)
+    style_notes: list[str] = Field(default_factory=list)
 
 
 class RecruiterCritique(BaseModel):

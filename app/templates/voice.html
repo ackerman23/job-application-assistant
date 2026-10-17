@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Writing style · Job Application Assistant{% endblock %}
+
+{% block styles %}
+<style>
+  .voice-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+  @media (max-width: 860px) { .voice-grid { grid-template-columns: 1fr; } }
+  .voice-card { padding: 1.25rem 1.4rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+  .voice-card h1, .voice-card h2 { margin: 0 0 0.4rem; letter-spacing: -0.02em; }
+  .voice-card p { color: var(--ink-600); }
+  .voice-card textarea { width: 100%; min-height: 20rem; padding: 0.8rem; font: inherit; border: 1px solid var(--line); border-radius: 0.6rem; resize: vertical; }
+  .voice-stats { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1rem; margin: 0.8rem 0; }
+  .voice-stats dt { color: var(--ink-600); }
+  .voice-stats dd { margin: 0; font-weight: 700; }
+  .saved { padding: 0.6rem 0.9rem; color: var(--teal-800); background: var(--teal-100); border-radius: 0.6rem; margin-bottom: 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="voice-grid">
+  <form class="voice-card" method="post" action="/voice">
+    <h1>Your writing style</h1>
+    <p>Paste two or three cover letters you wrote yourself. Separate them with a line containing <code>---</code>. They are only used to match your sentence length, tone and habits; their content is never reused as facts.</p>
+    {% if saved %}<div class="saved" role="status">Saved. New letters will follow this style.</div>{% endif %}
+    <label for="samples" class="sr-only" style="position:absolute;left:-9999px">Past letters</label>
+    <textarea id="samples" name="samples" placeholder="Letter one…&#10;&#10;---&#10;&#10;Letter two…">{{ samples_text }}</textarea>
+    <p><button class="button button--primary" type="submit">Save writing samples</button></p>
+  </form>
+  <section class="voice-card" aria-live="polite">
+    <h2>What the app learned</h2>
+    {% if profile.sample_count %}
+      <dl class="voice-stats">
+        <dt>Samples</dt><dd>{{ profile.sample_count }}</dd>
+        <dt>Formality</dt><dd>{{ profile.formality }}</dd>
+        <dt>Sentence length</dt><dd>{{ profile.sentence_length }} (~{{ profile.average_sentence_words|round|int }} words)</dd>
+        <dt>Directness</dt><dd>{{ profile.directness }}</dd>
+        <dt>Vocabulary</dt><dd>{{ profile.vocabulary }}</dd>
+      </dl>
+      <ul>{% for note in profile.style_notes %}<li>{{ note }}</li>{% endfor %}</ul>
+    {% else %}
+      <p>No samples yet. Without them, letters use the tone from your settings.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

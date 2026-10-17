@@ -159,19 +159,9 @@ class CoverLetterIntelligenceEngine:
         )
 
     def analyze_voice(self, writing_samples: list[str]) -> VoiceProfile:
-        if not writing_samples:
-            return VoiceProfile()
-        text = " ".join(writing_samples)
-        words = text.split()
-        average = len(words) / max(1, len(re.findall(r"[.!?]", text)))
-        return VoiceProfile(
-            formality="professional" if not any(word in text.casefold() for word in ("lol", "awesome", "super")) else "conversational",
-            directness="high" if average < 25 else "moderate",
-            technicality="high" if sum(char.isdigit() for char in text) or any(token in text.casefold() for token in ("api", "database", "system", "software")) else "moderate",
-            enthusiasm="moderate",
-            sentence_length="short" if average < 15 else "medium" if average < 25 else "long",
-            vocabulary="technical but accessible",
-        )
+        from app.services.voice import analyze
+
+        return analyze(writing_samples)
 
     def critique(self, text: str, job: JobAnalysis, match: MatchAnalysis) -> RecruiterCritique:
         report = self.quality_report(text, job, match)
