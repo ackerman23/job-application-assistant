@@ -100,9 +100,20 @@ class CoverLetterService:
         job: JobAnalysis,
         match: MatchAnalysis,
         applicant_notes: str = "",
+        job_text: str = "",
+        company_url: str = "",
     ) -> tuple[str, list[str]]:
-        text = self._generate(profile, job, match, applicant_notes)
-        return text, validate_cover_letter_style(text)
+        from app.services.research import research_company
+
+        found = research_company(job, job_text, company_url)
+        if found.research is not None:
+            text = self._generate(profile, job, match, applicant_notes, company_research=found.research)
+        else:
+            text = self._generate(profile, job, match, applicant_notes)
+        notes = list(found.notes)
+        notes.extend(n for n in getattr(text, "warnings", []) if n not in notes)
+        notes.extend(n for n in validate_cover_letter_style(text) if n not in notes)
+        return str(text), notes
 
 
 class DocumentExportService:

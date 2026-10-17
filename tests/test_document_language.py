@@ -29,7 +29,7 @@ def test_document_language_can_be_overridden_by_user_setting(monkeypatch):
 def test_job_analysis_extracts_the_job_description_language(monkeypatch):
     monkeypatch.setattr(jd_analyzer, "OPENAI_API_KEY", "test-key")
 
-    def fake_complete_json(prompt, payload):
+    def fake_complete_json(prompt, payload, model=None):
         assert "job_language" in payload["output_schema"]["properties"]
         assert "predominantly written in French" in prompt
         return {"job_language": "French"}

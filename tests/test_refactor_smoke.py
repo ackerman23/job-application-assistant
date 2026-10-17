@@ -24,10 +24,13 @@ def test_dashboard_page_renders():
 
 
 def test_jobs_analysis_route(monkeypatch):
-    def fake_ai_extraction(prompt, payload):
+    def fake_ai_extraction(prompt, payload, model=None):
+        if "missed_terms" in prompt:
+            return {"missed_terms": []}
         assert "technical_skills" in payload["output_schema"]["properties"]
         return {"technical_skills": ["Python"], "required_skills": ["Python"]}
 
+    monkeypatch.setattr("app.services.jd_analyzer.OPENAI_API_KEY", "test-key")
     monkeypatch.setattr("app.services.jd_analyzer.complete_json", fake_ai_extraction)
     client = app.test_client()
     response = client.post(

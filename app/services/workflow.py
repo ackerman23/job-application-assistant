@@ -45,9 +45,11 @@ def generate_cv_document(
             for item in match.matches
             if item.match_type in settings.default_selected_match_types
         ]
+    cv = generate_cv_tex(profile, job, match, selected)
+    report = getattr(cv, "report", None)
     return {
-        "cv_latex": generate_cv_tex(profile, job, match, selected),
-        "change_log": generate_change_log(match),
+        "cv_latex": str(cv),
+        "change_log": generate_change_log(match) + ("\n" + report.to_markdown() if report else ""),
     }
 
 

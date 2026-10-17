@@ -7,6 +7,7 @@ from app.core.config import EDITOR_MODEL, OPENAI_API_KEY, OPENAI_MODEL, ROOT, WR
 from app.core.settings import get_user_settings, resolve_document_language
 from app.models.schemas import CandidateProfile, CompanyResearch, JobAnalysis, MatchAnalysis, MatchType
 from app.services.cover_letter_engine import CoverLetterIntelligenceEngine
+from app.services.llm import sampling_kwargs
 
 PROMPTS = ROOT / "app" / "prompts"
 
@@ -67,8 +68,8 @@ def _is_related_requirement(skill_name: str, requirement: str) -> bool:
 def _client():
     if not OPENAI_API_KEY:
         raise RuntimeError("Set OPENAI_API_KEY in .env to generate tailored prose. Local analysis and template export work without it.")
-    from openai import OpenAI
-    return OpenAI(api_key=OPENAI_API_KEY)
+    from app.services.llm import _get_client
+    return _get_client()
 
 
 def _approved_context(
@@ -87,7 +88,10 @@ def _approved_context(
     intersections = engine.find_intersections(match)
     narrative = engine.build_narrative(profile, job, intersections, applicant_notes)
     strategy = engine.build_strategy(profile, job, hiring_need, intersections, research, applicant_notes)
-    voice = engine.analyze_voice(writing_samples if writing_samples is not None else profile.writing_samples)
+    if writing_samples is None:
+        from app.services.voice import load_samples
+        writing_samples = profile.writing_samples or load_samples()
+    voice = engine.analyze_voice(writing_samples)
     learning_gaps = [
         {
             "requirement": item.requirement,
@@ -141,6 +145,16 @@ def _approved_context(
     }
 
 
+class CoverLetterDraft(str):
+    """Letter text that also carries the review warnings and revision count."""
+
+    def __new__(cls, text: str, warnings: list[str] | None = None, revisions: int = 0):
+        obj = super().__new__(cls, text)
+        obj.warnings = list(warnings or [])
+        obj.revisions = revisions
+        return obj
+
+
 def generate_cover_letter(
     profile: CandidateProfile,
     job: JobAnalysis,
@@ -164,10 +178,22 @@ def generate_cover_letter(
         f"Prioritize these supported themes when relevant: {', '.join(settings.focus_skills) or 'none specified'}. "
         f"Additional user instructions: {settings.custom_instructions or 'none'}."
     )
+    if context.get("voice_profile", {}).get("sample_count"):
+        system_prompt += (
+            "\n\nVOICE\nThe voice_profile describes how the candidate writes. Match its sentence length, formality, "
+            "contraction use and first-person habits so the letter sounds like them. It is a style guide only: "
+            "never take facts, claims or phrasing of substance from it."
+        )
+    if context.get("company_research", {}).get("verified"):
+        system_prompt += (
+            "\n\nCOMPANY RESEARCH\ncompany_research contains sentences quoted from the company's own public pages. "
+            "You may refer to one or two of them naturally to explain why this company, paraphrasing closely and never "
+            "adding detail that is not in the quote."
+        )
     from openai import APIConnectionError, AuthenticationError, RateLimitError
     client = _client()
     try:
-        response = client.chat.completions.create(model=WRITING_MODEL, temperature=0.65, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": json.dumps(context, ensure_ascii=False)}])
+        response = client.chat.completions.create(model=WRITING_MODEL, **sampling_kwargs(WRITING_MODEL, 0.65), messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": json.dumps(context, ensure_ascii=False)}])
     except AuthenticationError as exc:
         raise RuntimeError("OpenAI rejected the API key. Check that it is active and belongs to the intended OpenAI project, then restart the app.") from exc
     except RateLimitError as exc:
@@ -175,31 +201,32 @@ def generate_cover_letter(
     except APIConnectionError as exc:
         raise RuntimeError("Could not connect to the OpenAI API. Check your internet connection and try again.") from exc
     result = response.choices[0].message.content or ""
-    quality = CoverLetterIntelligenceEngine().quality_report(result, job, match)
-    if settings.use_hiring_manager_review and quality.requires_review:
+    if not settings.use_hiring_manager_review:
+        return CoverLetterDraft(result)
+
+    def revise(draft: str, instructions: list[str]) -> str:
         editor_context = {
             **context,
-            "draft_to_edit": result,
-            "quality_report": quality.model_dump(mode="json"),
-            "editor_instruction": "Rewrite only where necessary. Keep supported concrete details, remove generic language, and return only the revised final letter.",
+            "draft_to_edit": draft,
+            "issues_to_fix": instructions,
+            "editor_instruction": "Fix only the listed issues. Remove or soften any claim the evidence does not support. Keep supported concrete details and the existing structure, add no new facts, and return only the revised final letter.",
         }
-        try:
-            edited = client.chat.completions.create(
-                model=EDITOR_MODEL,
-                temperature=0.65,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": json.dumps(editor_context, ensure_ascii=False)},
-                ],
-            )
-            result = edited.choices[0].message.content or result
-        except (AuthenticationError, RateLimitError, APIConnectionError):
-            # A first draft is still useful when the optional editor pass fails.
-            pass
-    # Factuality checks remain available to the quality-check endpoint and UI,
-    # but they are advisory here. The prompt tells the writer how to frame gaps
-    # honestly, so a draft is not discarded merely because it discusses a gap.
-    return result
+        edited = client.chat.completions.create(
+            model=EDITOR_MODEL,
+            **sampling_kwargs(EDITOR_MODEL, 0.5),
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": json.dumps(editor_context, ensure_ascii=False)},
+            ],
+        )
+        return edited.choices[0].message.content or draft
+
+    from app.services.agent import refine_cover_letter
+    refined = refine_cover_letter(
+        result, profile=profile, job=job, match=match, applicant_notes=applicant_notes, revise=revise,
+        company_research=context["company_research"] if context.get("company_research", {}).get("verified") else None,
+    )
+    return CoverLetterDraft(refined.text, refined.warnings, refined.revisions)
 
 
 def validate_cover_letter_style(text: str) -> list[str]:
@@ -267,7 +294,7 @@ def _translate_cv_items(items_json: str) -> str:
     try:
         response = client.chat.completions.create(
             model=WRITING_MODEL,
-            temperature=0,
+            **sampling_kwargs(WRITING_MODEL, 0),
             response_format={"type": "json_object"},
             messages=[
                 {
@@ -397,26 +424,27 @@ def generate_cv_tex(profile: CandidateProfile, job: JobAnalysis, match: MatchAna
         elif result.match_type == MatchType.MISSING and normalized_requirement not in existing:
             group["verified"].append(result.requirement)
         group["relevance"] += 10
+    from app.services.cv_agent import CVDocument, tailor_profile
+    base_profile, cv_report = (profile, None)
+    if settings.ai_tailoring:
+        base_profile, cv_report = tailor_profile(
+            profile, job, match, selected_requirements, max_bullets=settings.max_bullets_per_entry
+        )
+    ai_ordered = base_profile is not profile
     tailored_experience = []
-    for experience in profile.experience:
-        responsibilities = sorted(
-            experience.responsibilities,
-            key=relevance_score,
-            reverse=True,
-        )
-        achievements = sorted(
-            experience.achievements,
-            key=relevance_score,
-            reverse=True,
-        )
+    for experience in base_profile.experience:
+        if ai_ordered:
+            tailored_experience.append(experience)
+            continue
         tailored_experience.append(experience.model_copy(update={
-            "responsibilities": responsibilities,
-            "achievements": achievements,
+            "responsibilities": sorted(experience.responsibilities, key=relevance_score, reverse=True),
+            "achievements": sorted(experience.achievements, key=relevance_score, reverse=True),
         }))
 
-    tailored = profile.model_copy(update={
+    ranked_projects = base_profile.projects if ai_ordered else sorted(base_profile.projects, key=rank, reverse=True)
+    tailored = base_profile.model_copy(update={
         "experience": tailored_experience[:settings.max_experience_entries],
-        "projects": sorted(profile.projects, key=rank, reverse=True)[:settings.max_project_entries],
+        "projects": sorted(ranked_projects, key=rank, reverse=True)[:settings.max_project_entries] if not ai_ordered else ranked_projects[:settings.max_project_entries],
         "skills": cv_skills,
     })
     language = resolve_document_language(job.job_language)
@@ -429,9 +457,23 @@ def generate_cv_tex(profile: CandidateProfile, job: JobAnalysis, match: MatchAna
         }
         for group in skill_groups:
             group["name"] = translated_group_names[group["name"]]
-    return env.get_template("default_cv.tex.j2").render(
+    importance_weight = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
+
+    def skill_priority(name: str) -> int:
+        return max(
+            (importance_weight.get(m.importance, 1) for m in match.matches
+             if m.match_type != MatchType.CONFLICT and _is_related_requirement(name, m.requirement)),
+            default=0,
+        )
+
+    for group in skill_groups:
+        for key in ("verified", "familiarity"):
+            group[key].sort(key=lambda name: -skill_priority(name))
+    skill_groups.sort(key=lambda g: -g["relevance"])
+    rendered = env.get_template("default_cv.tex.j2").render(
         candidate=tailored, job=job, match=match, skill_groups=skill_groups, language=language
     )
+    return CVDocument(rendered, cv_report)
 
 
 def generate_change_log(match: MatchAnalysis) -> str:
