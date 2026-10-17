@@ -16,6 +16,10 @@ cv:
   # Defaults preserve up to ten entries; lower these values for a shorter CV.
   max_experience_entries: 10
   max_project_entries: 10
+  # Reorder and lightly reword bullets for each job. Rewrites are verified against
+  # the original bullet and never add facts; failures keep your original wording.
+  ai_tailoring: true
+  max_bullets_per_entry: 6
 
 cover_letter:
   # These guide the writer but never permit invented experience or credentials.

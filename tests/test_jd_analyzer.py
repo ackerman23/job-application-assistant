@@ -7,7 +7,9 @@ from app.services import jd_analyzer
 def test_job_analyzer_uses_ai_response_and_marks_method(monkeypatch):
     observed = {}
 
-    def fake_complete_json(prompt, payload):
+    def fake_complete_json(prompt, payload, model=None):
+        if prompt is jd_analyzer.AUDIT_PROMPT:
+            return {"missed_terms": []}
         observed["prompt"] = prompt
         observed["job_description"] = payload["job_description"]
         return {
@@ -40,7 +42,7 @@ def test_job_analyzer_requires_api_key_instead_of_using_keyword_fallback(monkeyp
 
 
 def test_job_analyzer_surfaces_ai_failure_without_keyword_fallback(monkeypatch):
-    def fail_ai(prompt, payload):
+    def fail_ai(prompt, payload, model=None):
         raise ConnectionError("provider unavailable")
 
     monkeypatch.setattr(jd_analyzer, "OPENAI_API_KEY", "configured-test-key")
@@ -51,7 +53,7 @@ def test_job_analyzer_surfaces_ai_failure_without_keyword_fallback(monkeypatch):
 
 
 def test_job_analyzer_rejects_too_short_input_before_calling_ai(monkeypatch):
-    def unexpected_ai_call(prompt, payload):
+    def unexpected_ai_call(prompt, payload, model=None):
         pytest.fail("AI should not be called for an invalid short description")
 
     monkeypatch.setattr(jd_analyzer, "OPENAI_API_KEY", "configured-test-key")

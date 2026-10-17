@@ -21,6 +21,8 @@ class CVSettings(BaseModel):
     include_explicitly_selected_missing_skills: bool = True
     max_experience_entries: int = Field(default=10, ge=1, le=10)
     max_project_entries: int = Field(default=10, ge=1, le=10)
+    ai_tailoring: bool = True
+    max_bullets_per_entry: int = Field(default=6, ge=2, le=10)
 
     @field_validator("default_selected_match_types")
     @classmethod

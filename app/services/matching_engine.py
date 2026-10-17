@@ -1,6 +1,7 @@
+import os
 import re
 from app.models.schemas import CandidateProfile, JobAnalysis, MatchAnalysis, RequirementMatch, MatchType
-from app.core.config import OPENAI_API_KEY
+from app.core.config import MATCHING_MODEL, MATCHING_REVIEW_MODEL, OPENAI_API_KEY
 from app.services.llm import complete_json
 
 NON_TECHNICAL_REQUIREMENT_PATTERNS = (
@@ -39,7 +40,8 @@ def _tokens(value: str) -> set[str]:
 def _profile_evidence(profile: CandidateProfile):
     rows = []
     for skill in profile.skills:
-        rows.append((skill.name, skill.status.value, "; ".join(skill.evidence) or f"Profile skill: {skill.name}"))
+        detail = "; ".join(skill.evidence)
+        rows.append((skill.name, skill.status.value, f"Skill {skill.name}: {detail}" if detail else f"Skill {skill.name} (listed in the candidate profile)"))
     for exp in profile.experience:
         for value in [*exp.technologies, *exp.domains, exp.role, *exp.responsibilities, *exp.achievements]:
             rows.append((value, exp.evidence_level.value, f"{exp.role} at {exp.company}: {value}"))
@@ -105,8 +107,26 @@ def _match_job_ai(job: JobAnalysis, profile: CandidateProfile) -> MatchAnalysis:
         "requirements_to_assess": requirements,
         "candidate_evidence": [{"id": i, "status": status, "content": content} for i, (_, status, content) in enumerate(evidence)],
     }
-    prompt = """Compare every supplied technical skill, engineering domain, or tool requirement against only the candidate evidence records. Return a JSON object with keys matches, summary, learning_recommendations. For each requirement return requirement (exact input text), importance (HIGH/MEDIUM/LOW), match_type (VERIFIED/TRANSFERABLE/FAMILIARITY/MISSING), evidence_indices (array of supplied record IDs), recommended_wording (short and truthful), confidence (0..1). Use VERIFIED only when the cited evidence directly supports it; TRANSFERABLE only when cited adjacent evidence exists; FAMILIARITY only for evidence marked FAMILIARITY; otherwise MISSING. Never infer an experience, tool, outcome, metric, or qualification. A missing technical skill may be named as a learning priority but not as candidate experience. Return one assessment per input requirement. Learning recommendations should be specific to the job and clearly distinguish current state from what to learn. Do not add or assess generic soft skills or personal traits such as communication, teamwork, leadership, interpersonal skills, stakeholder management, organization, or time management; those are outside this technical review."""
-    result = complete_json(prompt, payload)
+    prompt = """Compare every supplied technical skill, engineering domain, or tool requirement against only the candidate evidence records. Return a JSON object with keys matches, summary, learning_recommendations. For each requirement return requirement (exact input text), importance (HIGH/MEDIUM/LOW), match_type (VERIFIED/TRANSFERABLE/FAMILIARITY/MISSING), evidence_indices (array of supplied record IDs), recommended_wording (short and truthful), confidence (0..1). Use VERIFIED only when the cited evidence directly supports it; TRANSFERABLE only when cited adjacent evidence exists; FAMILIARITY only for evidence marked FAMILIARITY; otherwise MISSING. Judge each requirement by meaning, not just spelling: recognise synonyms, acronyms and versions (for example PostgreSQL supports SQL and relational databases; FastAPI and Flask support REST API development; a Docker project supports containerisation) and cite every record that supports it, strongest first. A tool inside the same family counts as TRANSFERABLE, not VERIFIED. recommended_wording must reuse the job's own term when the evidence truly supports it, and must be a short skill label or phrase, never a sentence with invented detail. Judge each requirement by meaning, not just spelling: recognise synonyms, acronyms and versions (for example PostgreSQL supports SQL and relational databases; FastAPI and Flask support REST API development; a Docker project supports containerisation) and cite every record that supports it, strongest first. A tool inside the same family counts as TRANSFERABLE, not VERIFIED. recommended_wording must reuse the job's own term when the evidence truly supports it, and must be a short skill label or phrase, never a sentence with invented detail. Never infer an experience, tool, outcome, metric, or qualification. A missing technical skill may be named as a learning priority but not as candidate experience. Return one assessment per input requirement. Learning recommendations should be specific to the job and clearly distinguish current state from what to learn. Do not add or assess generic soft skills or personal traits such as communication, teamwork, leadership, interpersonal skills, stakeholder management, organization, or time management; those are outside this technical review."""
+    first = complete_json(prompt, payload, model=MATCHING_MODEL)
+    try:
+        matches, result = _build_matches(first, requirements, evidence)
+    except ValueError:
+        matches, result = None, first
+    review_payload = {**payload, "first_assessment": first}
+    review_prompt = REVIEW_PROMPT + "\n\n" + prompt
+    try:
+        matches, result = _build_matches(complete_json(review_prompt, review_payload, model=MATCHING_REVIEW_MODEL), requirements, evidence)
+    except Exception:
+        if matches is None:
+            raise
+    return _finalize(matches, result)
+
+
+REVIEW_PROMPT = """You are reviewing a first-pass requirement assessment (first_assessment). Check every row against the candidate evidence: downgrade any match whose cited evidence does not truly support it, and upgrade any MISSING requirement for which the evidence records contain real support (synonym, acronym, or same-family technology). Fix evidence_indices so they cite the best records. Return the full corrected JSON in the same format, one row per requirement."""
+
+
+def _build_matches(result: dict, requirements: list[str], evidence: list):
     raw_matches = result.get("matches")
     if not isinstance(raw_matches, list):
         raise ValueError("AI response omitted the matches list")
@@ -143,6 +163,10 @@ def _match_job_ai(job: JobAnalysis, profile: CandidateProfile) -> MatchAnalysis:
             candidate_evidence=[x[2] for x in selected[:5]], recommended_wording=wording, confidence=confidence))
     if len(matches) != len(requirements):
         raise ValueError("AI did not return an assessment for every requirement")
+    return matches, result
+
+
+def _finalize(matches: list[RequirementMatch], result: dict) -> MatchAnalysis:
     weights = {MatchType.VERIFIED: 1, MatchType.TRANSFERABLE: .6, MatchType.FAMILIARITY: .35, MatchType.MISSING: 0, MatchType.CONFLICT: 0}
     score = round(100 * sum(weights[m.match_type] for m in matches) / max(1, len(matches)))
     learning = result.get("learning_recommendations", [])
@@ -153,15 +177,19 @@ def _match_job_ai(job: JobAnalysis, profile: CandidateProfile) -> MatchAnalysis:
         learning_recommendations=[{str(k): str(v) for k, v in item.items()} for item in learning])
 
 
+
+
 def match_job(job: JobAnalysis, profile: CandidateProfile) -> MatchAnalysis:
-    """Use model-assisted evidence matching when configured, with deterministic fallback."""
-    if OPENAI_API_KEY:
-        try:
-            return _match_job_ai(job, profile)
-        except Exception as exc:
-            fallback = _match_job_local(job, profile)
-            return fallback.model_copy(update={
-                "analysis_method": "local fallback",
-                "analysis_warning": f"AI matching failed ({type(exc).__name__}); local matching is shown instead.",
-            })
-    return _match_job_local(job, profile)
+    """Assess requirements against profile evidence with the AI matcher.
+
+    There is no silent downgrade: a failure raises so the user never sees misleading
+    scores. Set ALLOW_LOCAL_MATCHING=1 to opt in to the deterministic local matcher.
+    """
+    if os.getenv("ALLOW_LOCAL_MATCHING", "").lower() in {"1", "true", "yes"}:
+        return _match_job_local(job, profile)
+    if not OPENAI_API_KEY:
+        raise RuntimeError("AI matching requires OPENAI_API_KEY. Add it to the project .env file and restart the app.")
+    try:
+        return _match_job_ai(job, profile)
+    except Exception as exc:
+        raise RuntimeError(f"AI matching failed ({type(exc).__name__}). No local fallback was used; please retry.") from exc
