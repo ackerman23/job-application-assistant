@@ -19,3 +19,4 @@ data/candidate_profile_import.json
 *.pdf
 resume.tex
 .streamlit/secrets.toml
+.vscode/tasks.json
