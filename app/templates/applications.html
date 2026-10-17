@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Applications · Job Application Assistant{% endblock %}
+
+{% block styles %}
+<style>
+  .page-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+  .page-head h1 { margin: 0; font-size: clamp(1.7rem, 3vw, 2.3rem); letter-spacing: -0.03em; }
+  .page-head p { margin: 0.35rem 0 0; color: var(--ink-600); }
+  .filters { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.25rem; }
+  .filters input, .filters select, .app-card select, .app-card textarea { padding: 0.55rem 0.7rem; color: var(--ink-950); background: #fff; border: 1px solid var(--line); border-radius: 0.6rem; }
+  .filters input { min-width: min(18rem, 100%); }
+  .app-list { display: grid; gap: 0.9rem; }
+  .app-card { padding: 1.1rem 1.25rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+  .app-card__top { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 0.75rem; }
+  .app-card h2 { margin: 0; font-size: 1.1rem; }
+  .app-card .meta { margin: 0.2rem 0 0; color: var(--ink-600); font-size: 0.88rem; }
+  .score { padding: 0.25rem 0.65rem; color: var(--teal-800); background: var(--teal-100); border-radius: 999px; font-size: 0.85rem; font-weight: 800; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.7rem 0; }
+  .chip { padding: 0.15rem 0.55rem; color: var(--ink-700); background: var(--surface-muted); border: 1px solid var(--line); border-radius: 999px; font-size: 0.78rem; }
+  .app-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-top: 0.6rem; }
+  .app-actions form { display: inline-flex; gap: 0.4rem; align-items: center; }
+  .app-card textarea { width: 100%; min-height: 3.5rem; margin-top: 0.7rem; resize: vertical; }
+  .button--small { min-height: 2.2rem; padding: 0.4rem 0.8rem; font-size: 0.88rem; }
+  .button--danger { color: var(--red-700); background: #fff; border-color: var(--red-100); }
+  .empty { padding: 3rem 1rem; color: var(--ink-600); text-align: center; background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius-md); }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">History</p>
+    <h1>Your applications</h1>
+    <p>Every analyzed job is saved locally. Reopen one to continue where you left off.</p>
+  </div>
+  <a class="button button--primary" href="/dashboard">New application</a>
+</section>
+
+<form class="filters" method="get" action="/applications" role="search">
+  <input type="search" name="q" value="{{ query }}" placeholder="Search company or role" aria-label="Search company or role">
+  <select name="status" aria-label="Filter by status">
+    <option value="">All statuses</option>
+    {% for status in statuses %}<option value="{{ status }}" {% if status == active_status %}selected{% endif %}>{{ status }}</option>{% endfor %}
+  </select>
+  <button class="button button--secondary button--small" type="submit">Filter</button>
+</form>
+
+{% if applications %}
+<div class="app-list">
+  {% for app in applications %}
+  <article class="app-card">
+    <div class="app-card__top">
+      <div>
+        <h2>{{ app.position or "Untitled role" }}{% if app.company %} · {{ app.company }}{% endif %}</h2>
+        <p class="meta">Saved {{ app.created_at[:10] }} · updated {{ app.updated_at[:10] }}</p>
+      </div>
+      <span class="score" title="Evidence match score">{{ app.score }}% match</span>
+    </div>
+    <div class="chips">
+      <span class="chip">{{ app.status }}</span>
+      {% if app.has_letter %}<span class="chip">Cover letter drafted</span>{% endif %}
+      {% for doc in app.documents[-3:] %}<span class="chip">{{ doc.label }}</span>{% endfor %}
+    </div>
+    <div class="app-actions">
+      <a class="button button--secondary button--small" href="/dashboard?application={{ app.id }}">Reopen</a>
+      <form method="post" action="/applications/{{ app.id }}/status">
+        <label class="sr-only" for="status-{{ app.id }}" style="position:absolute;left:-9999px">Status</label>
+        <select id="status-{{ app.id }}" name="status">
+          {% for status in statuses %}<option value="{{ status }}" {% if status == app.status %}selected{% endif %}>{{ status }}</option>{% endfor %}
+        </select>
+        <button class="button button--secondary button--small" type="submit">Update status</button>
+      </form>
+      <form method="post" action="/applications/{{ app.id }}/delete" onsubmit="return confirm('Delete this saved application?');">
+        <button class="button button--danger button--small" type="submit">Delete</button>
+      </form>
+    </div>
+    <form method="post" action="/applications/{{ app.id }}/notes">
+      <textarea name="notes" aria-label="Notes" placeholder="Notes: contacts, deadlines, follow-ups">{{ app.notes }}</textarea>
+      <button class="button button--secondary button--small" type="submit" style="margin-top:0.4rem">Save notes</button>
+    </form>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <p><strong>No saved applications{% if query or active_status %} match these filters{% endif %}.</strong></p>
+  <p>Analyze a job from the workspace and it will appear here automatically.</p>
+</div>
+{% endif %}
+{% endblock %}
